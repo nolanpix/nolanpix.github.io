@@ -9,8 +9,8 @@
  *
  * Until the Worker is deployed the badge stays hidden -- no broken zeros, no errors.
  * Write-frugal: a page is counted at most once per 30 min per browser (localStorage);
- * repeat views in that window just read the current numbers. That protects the KV
- * free-tier write budget and stops refresh-spam from inflating counts.
+ * repeat views in that window just read the current numbers. Only a referring
+ * hostname is sent; paths, query strings and credentials are omitted.
  */
 (function () {
   "use strict";
@@ -80,6 +80,13 @@
     catch (e) { return 0; }
   }
 
+  function referrerHost() {
+    try {
+      var ref = new URL(document.referrer);
+      return ref.protocol === "https:" || ref.protocol === "http:" ? ref.hostname : "";
+    } catch (e) { return ""; }
+  }
+
   function query(path) {
     var key = "np:hit:" + path;
     var fresh = Date.now() - readLast(key) > HIT_TTL_MS;
@@ -87,12 +94,14 @@
       return fetch(endpoint + "/hit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: path }),
+        body: JSON.stringify({ path: path, ref: referrerHost() }),
+        referrerPolicy: "no-referrer",
+        credentials: "omit",
         keepalive: true,
         cache: "no-store",
       }).then(function (r) { return r.json(); }).then(function (data) {
         // Mark the page as counted only once the Worker confirmed the hit.
-        if (data && data.ok) {
+        if (data && data.ok && !data.throttled) {
           try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
         }
         return data;
@@ -100,6 +109,8 @@
     }
     // Counted here recently -> read-only, no write.
     return fetch(endpoint + "/stats?path=" + encodeURIComponent(path), {
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
       cache: "no-store",
     }).then(function (r) { return r.json(); });
   }

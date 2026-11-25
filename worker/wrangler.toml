@@ -1,13 +1,22 @@
 name = "nolanpix-counter"
 main = "counter.js"
 compatibility_date = "2026-11-01"
+workers_dev = true
 
-# Workers Free plan is enough (100k requests/day). No custom domain needed:
-# after deploy the endpoint is https://nolanpix-counter.<your-subdomain>.workers.dev
-#
-# Bind a KV namespace named COUNTER. Create it first, then paste its id below:
-#   wrangler kv namespace create COUNTER      (older wrangler: wrangler kv:namespace create COUNTER)
-# Copy the printed id into the line below, then: wrangler deploy
+# Dashboard users: keep COUNTER, add DB, configure the variables in the README,
+# paste counter.js, then add the daily UTC cron. No Wrangler config is required.
+# CLI users: replace BOTH placeholders with IDs from your own account first.
 [[kv_namespaces]]
 binding = "COUNTER"
-id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+id = "PASTE_YOUR_EXISTING_KV_NAMESPACE_ID_HERE"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nolanpix-stats"
+database_id = "PASTE_YOUR_D1_DATABASE_ID_HERE"
+
+[triggers]
+crons = ["5 0 * * *"]
+
+# Supply GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET and ADMIN_PASSWORD_HASH through
+# Worker settings (or wrangler secret put). Never commit their values here.
