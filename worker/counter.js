@@ -72,7 +72,8 @@ async function isRateLimited(kv, ip) {
   const bucket = Math.floor(Date.now() / 1000 / RL_WINDOW_S);
   const key = "rl:" + ip + ":" + bucket;
   const n = (await getInt(kv, key)) + 1;
-  await kv.put(key, String(n), { expirationTtl: RL_WINDOW_S * 2 });
+  // Workers KV rejects expirationTtl below 60 s (the put throws -> Cloudflare 1101).
+  await kv.put(key, String(n), { expirationTtl: Math.max(60, RL_WINDOW_S * 2) });
   return n > RL_MAX;
 }
 
@@ -134,19 +135,26 @@ async function handleStats(request, env, origin) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    try {
+      if (request.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers: corsHeaders(origin) });
+      }
+      const url = new URL(request.url);
+      if (request.method === "POST" && url.pathname === "/hit") {
+        return await handleHit(request, env, origin);
+      }
+      if (request.method === "GET" && url.pathname === "/stats") {
+        return await handleStats(request, env, origin);
+      }
+      if (request.method === "GET" && url.pathname === "/") {
+        return json({ ok: true, service: "nolanpix-counter" }, 200, origin);
+      }
+      return json({ ok: false, error: "not found" }, 404, origin);
+    } catch (e) {
+      // An uncaught error becomes a Cloudflare 1101 page without CORS headers, which
+      // the browser only reports as an opaque CORS failure. Answer JSON instead.
+      console.error((e && e.stack) || e);
+      return json({ ok: false, error: "internal" }, 500, origin);
     }
-    const url = new URL(request.url);
-    if (request.method === "POST" && url.pathname === "/hit") {
-      return handleHit(request, env, origin);
-    }
-    if (request.method === "GET" && url.pathname === "/stats") {
-      return handleStats(request, env, origin);
-    }
-    if (request.method === "GET" && url.pathname === "/") {
-      return json({ ok: true, service: "nolanpix-counter" }, 200, origin);
-    }
-    return json({ ok: false, error: "not found" }, 404, origin);
   },
 };

@@ -84,14 +84,19 @@
     var key = "np:hit:" + path;
     var fresh = Date.now() - readLast(key) > HIT_TTL_MS;
     if (fresh) {
-      try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
       return fetch(endpoint + "/hit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: path }),
         keepalive: true,
         cache: "no-store",
-      }).then(function (r) { return r.json(); });
+      }).then(function (r) { return r.json(); }).then(function (data) {
+        // Mark the page as counted only once the Worker confirmed the hit.
+        if (data && data.ok) {
+          try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
+        }
+        return data;
+      });
     }
     // Counted here recently -> read-only, no write.
     return fetch(endpoint + "/stats?path=" + encodeURIComponent(path), {

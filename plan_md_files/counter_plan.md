@@ -78,3 +78,40 @@ port the same endpoints to Durable Objects (atomic) or D1 — client unchanged.
 - Open item (needs the owner): deploy the Worker on the owner's Cloudflare
   account, then paste the `*.workers.dev` URL into `assets/stats.js`
   `STATS_ENDPOINT` and commit. Only then does the badge light up.
+  (Done 2026-11-25 by the owner: commit `1246b07`, endpoint
+  `https://nolanpix-counter.song66666.workers.dev/`. See §6.)
+
+## 6. 改进策略（线上 `POST /hit` 一律 1101 的修复）
+
+**现象（2026-11-25 22:00 实测）**：Worker 已部署，`GET /` 和 `GET /stats` 都返回 200，
+CORS 预检返回 204；但带站点 Origin 的 `POST /hit` 一律 HTTP 500，响应体是
+`error code: 1101`，且不带 CORS 头。Chrome 里这次请求 status=0（CORS 失败），徽标保持隐藏；
+30 分钟内再次打开页面只走 `/stats`，显示 `0 views / 0 today`。KV 里没有任何计数。
+
+**根因**：`isRateLimited` 用 `expirationTtl: RL_WINDOW_S * 2`（20 秒）写限流键，而 Workers KV
+要求 TTL 至少 60 秒。每次 hit 都先经过限流写入，所以全部在第一次写入时就抛错，后面的计数写入
+一次也没执行。用 Miniflare（workerd + KV 模拟器）复现，报错原文：
+`KV PUT failed: 400 Invalid expiration_ttl of 20. Expiration TTL must be at least 60.`
+
+**§5 的测试为什么没发现**：手写的 Node 内存 KV mock 不校验 TTL 下限。以后 Worker 的测试一律在
+Miniflare 里跑。
+
+**修复**：
+1. `worker/counter.js`：限流键 TTL 改为 `Math.max(60, RL_WINDOW_S * 2)`。
+2. `worker/counter.js`：整个 `fetch` 包一层 try/catch。未捕获的异常会变成不带 CORS 头的 1101
+   页面，浏览器只能看到含糊的 CORS 错误；现在改为返回带 CORS 头的 JSON `{"ok":false,"error":"internal"}`
+   （HTTP 500），异常写进 `console.error`，可以在 Cloudflare 的日志里查看。
+3. `assets/stats.js`：原来在请求发出前就记下 localStorage 的“本页已计数”，请求失败也照样记，
+   导致之后 30 分钟不再计数。改为 Worker 返回 `ok:true` 之后才记。
+
+**验证**：Miniflare 里 11/11 通过（计数、同访客去重、新访客、按页隔离、外站 Origin 403、
+`..` 路径 400、`/stats`、同一窗口 40 次全部计数、第 41 次 throttled 且计数不变）；负面测试：
+把 TTL 改回 20，handler 返回 HTTP 500、带 CORS 头、JSON `ok:false`（3/3）。
+
+**Q&A / 备注**
+- Q：仓库推送后线上就修好了吗？A：没有。Worker 运行在站长自己的 Cloudflare 账号里，本机没有
+  wrangler 凭据。站长要在面板里把新的 `worker/counter.js` 粘贴进去重新 Deploy，修复才生效。
+- 剩余风险（未实测）：KV 同一个键每秒最多写 1 次。同一秒内两次写同一个键（例如两个访客同时打开首页）
+  时，第二次 put 会被拒绝；现在这种情况返回 JSON 500，这一次不计数，徽标隐藏。按博客的访问量很少会碰到。
+- 写入额度：一次计数大约 2 次 KV 写入（限流键 + 页面计数），访客当天首次访问另加 3 次。免费额度
+  1,000 次写入/天，大约够 300–400 次浏览/天。流量涨上来以后改用 Durable Objects 或 D1（§4）。
