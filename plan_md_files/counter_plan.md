@@ -314,3 +314,7 @@ event.log  23:01:12  /notes/x.html  <- x.com  US  mobile Safari iOS  new
 - 兼容性修正：首次测试发现 workerd 不支持 `fetch` 的 `redirect: 'error'`，会在调用 GitHub 前抛出 TypeError。改为 `manual` 并拒绝一切非成功状态，不跟随重定向。
 - Chromium 用本地 D1 的 30 天模拟数据实测：1440×960 深/浅、390×844 手机均无整页水平溢出；每档检查图表、7 天切换、请求失败时保留旧数据、注销或过期后清除报表。三张截图不含真实访客数据。
 - 验收边界：以上是本地真实 Worker 运行时与浏览器验证，不是生产 GitHub 授权。必须由站长配置 OAuth 应用、DB 绑定和 Secrets 后部署 Worker，再验证真实身份登录。GitHub Pages 的发布本身不会替换 Worker。
+
+## 9. 改进策略（原生密码表单返回登录页）
+
+站长报告 GitHub 登录后提交密码返回起点。以前的 API 测试显式设置 Origin，浏览器测试从完整会话开始；两者都没有覆盖浏览器生成密码表单请求头的过程。用真实 Chromium、回环 HTTPS、Miniflare 和模拟 GitHub 第一阶段会话对比同一表单：旧版发送 `Origin: null`，响应 403 `Invalid form origin.`；修复后发送同源 Origin、响应 303，随后成功加载报表和退出。只在含密码或登出表单的 HTML 设置 `Referrer-Policy: same-origin`；OAuth 回调和其他私有响应继续 `no-referrer`，严格 Origin 检查不变。14 组原有回归通过。生产须部署此 Worker 并重新打开页面；本地复现未使用站长的真实凭据。

@@ -206,7 +206,10 @@ function privateReply(body, status = 200, type, cookies = []) {
   return new Response(body,{status,headers:h});
 }
 function page(stage, message = '', status = 200, cookies = []) {
-  return privateReply(adminPage(stage,message),status,undefined,cookies);
+  const response = privateReply(adminPage(stage,message),status,undefined,cookies);
+  // Native form POSTs need their same-origin Origin; never send a referrer off-site.
+  if (stage === 'password' || stage === 'report') response.headers.set('Referrer-Policy','same-origin');
+  return response;
 }
 function redirect(loc, cookies = [], status = 303) {
   const h = adminHeaders(); h.set('Location',loc); for (const c of cookies) h.append('Set-Cookie',c);
