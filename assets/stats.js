@@ -22,7 +22,7 @@
    *     <meta name="np-stats-endpoint" content="https://...workers.dev">
    *     <script>window.NP_STATS_ENDPOINT = "https://...workers.dev";</script>
    */
-  var STATS_ENDPOINT = "";
+  var STATS_ENDPOINT = "https://nolanpix-counter.song66666.workers.dev/";
   /* ==================================================================== */
 
   var HIT_TTL_MS = 1800000; // 30 min: min gap between counted hits per page
