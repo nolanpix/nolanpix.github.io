@@ -263,3 +263,31 @@ article.post { padding: 40px 0 10px; }
 }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* ---- visit status bar (injected by assets/stats.js) ---- */
+.statbar {
+  position: fixed; left: 16px; bottom: 16px; z-index: 20;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 12px;
+  font-family: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo,
+               Consolas, monospace;
+  font-size: 0.74rem; color: var(--muted); line-height: 1;
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  border: 1px solid var(--line); border-radius: 100px;
+  backdrop-filter: saturate(140%) blur(8px);
+  box-shadow: 0 6px 22px -14px rgba(0, 0, 0, .7);
+  user-select: none; -webkit-user-select: none;
+}
+.statbar[hidden] { display: none; }
+.statbar b { color: var(--fg); font-weight: 600; }
+.statbar .sb-sep { color: var(--faint); }
+.statbar .sb-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #3fb950; box-shadow: 0 0 8px color-mix(in srgb, #3fb950 60%, transparent);
+  animation: sb-pulse 2.4s ease-in-out infinite;
+}
+@keyframes sb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .statbar .sb-dot { animation: none; } }
+@media (max-width: 620px) {
+  .statbar { left: 10px; bottom: 10px; padding: 6px 10px; font-size: 0.7rem; }
+}

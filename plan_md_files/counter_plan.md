@@ -1,0 +1,80 @@
+# counter_plan.md — visit counter, status bar, anti-scraping
+
+Scope: give nolanpix.github.io per-page view counts + daily-visitor counts, shown
+in a small status badge beside every page, plus soft anti-scraping. Free, no
+custom domain.
+
+Files:
+- `worker/counter.js`      Cloudflare Worker (KV-backed) — the counting backend.
+- `worker/wrangler.toml`   deploy config (KV binding `COUNTER`).
+- `worker/README.md`       two deploy paths (dashboard / wrangler CLI) + tests.
+- `assets/stats.js`        client badge; injected on every page via one <script>.
+- `.statbar` CSS in `assets/style.css`.
+- `robots.txt`, `sitemap.xml`  soft anti-scraping + SEO.
+
+## 1. Design decisions
+
+- **Backend = Cloudflare Worker + KV** (user choice). Free tier: 100k req/day,
+  KV 100k reads/day, **1,000 writes/day, 1 write/sec per key**. The write cap is
+  the real constraint and shaped everything below.
+- **No custom domain**: endpoint is `*.workers.dev`. The client is wired by
+  editing one constant (`STATS_ENDPOINT` in `assets/stats.js`) OR a
+  `<meta name="np-stats-endpoint">` / `window.NP_STATS_ENDPOINT` override.
+- **Badge hidden until deployed**: with no endpoint configured, or on any fetch
+  error, the badge renders nothing. No fake zeros, no console errors. This is the
+  committed default state — it lights up only after the owner deploys the Worker.
+- **Metrics shown**: `views` = this page's total PV; `today` = site-wide unique
+  visitors today (DAU). Site-wide `total` is also stored and returned for future
+  use (not shown yet).
+
+## 2. Staying under the KV write budget (key design)
+
+- **Per-path PV keys** (`pv:<path>`) spread writes across keys, dodging the
+  1-write/sec-per-key limit.
+- **DAU writes only on a visitor's FIRST hit of the day.** Visitor id =
+  `SHA-256(ip + UA + date + salt)` — cookieless, not stored raw, not reversible
+  to an IP. A `seen:<date>:<vid>` marker (TTL 36h) gates the daily increment.
+- **Client write-throttle**: a page is counted at most once per 30 min per
+  browser (localStorage timestamp); repeat views in that window call read-only
+  `/stats`. Kills refresh-spam inflation and saves writes.
+
+## 3. Anti-abuse / anti-scraping (soft, per user choice)
+
+- **Origin guard**: `/hit` only counts when `Origin: https://nolanpix.github.io`.
+  Other origins get 403 — curl/bots can't run up the counter from off-site.
+- **Per-IP sliding window**: >40 counted hits / 10s from one IP -> `throttled`,
+  numbers returned but counters NOT advanced (protects the write budget).
+- **Path validation**: safe charset only, length <=128, reject `..` — no key
+  flooding with junk paths.
+- **robots.txt**: welcomes search engines, sets `Crawl-delay`, and `Disallow: /`
+  for ~17 known bulk/AI-training crawlers (GPTBot, CCBot, ClaudeBot, Bytespider,
+  Amazonbot, Ahrefs/Semrush, etc.). These honor robots.txt; malicious bots ignore
+  it, which is why the Worker-side rate-limit exists.
+
+## 4. KV has no atomic increment
+
+Under heavy concurrency a few counts can be lost (read-modify-write race).
+Negligible at personal-blog scale. Upgrade path if the site ever grows:
+port the same endpoints to Durable Objects (atomic) or D1 — client unchanged.
+
+## 5. Verification (evidence)
+
+- `node --check` on `counter.js` and `stats.js` — pass.
+- `python3 -m py_compile tools/gen_notes.py` — pass; 3 notes regenerated, each
+  carries `../assets/stats.js`; `index.html` carries `assets/stats.js`.
+- Node in-memory-KV harness, 15 assertions ALL PASS: first-hit pv/dau,
+  same-visitor refresh dedup, per-page PV isolation, new-visitor DAU,
+  Origin 403, path-traversal 400, read-only /stats, rate-limit throttle +
+  frozen counter. The harness first caught a real bug: the path charset allowed
+  `.` so `/../x` was accepted and counted — fixed by rejecting `..`.
+
+## Q&A / notes
+
+- Q: why not show a number before deploy? A: there is no backend yet; showing
+  anything would be fake. Hidden-until-real is the honest default.
+- Q: is the Worker source public (it's in the repo)? A: yes, served at
+  `/worker/counter.js`. No secrets in it; `SALT` is explicitly not a secret
+  (rotating it just resets visitor ids). Fine to be open.
+- Open item (needs the owner): deploy the Worker on the owner's Cloudflare
+  account, then paste the `*.workers.dev` URL into `assets/stats.js`
+  `STATS_ENDPOINT` and commit. Only then does the badge light up.

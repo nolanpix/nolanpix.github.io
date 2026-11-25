@@ -281,6 +281,8 @@ PAGE = """<!doctype html>
   </div>
 </footer>
 
+<script defer src="../assets/stats.js"></script>
+
 </body>
 </html>
 """
