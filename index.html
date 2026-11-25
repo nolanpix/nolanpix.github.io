@@ -1,49 +1,172 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nolan Pierce</title>
-  <meta name="description" content="Systems &amp; hardware tinkerer in LA, turning late-night ideas into working prototypes and tiny tools.">
-  <link rel="icon" href="https://github.com/nolanpix.png?size=64">
-  <style>
-    :root {
-      --bg: #faf7f2; --fg: #1d1b26; --muted: #6b6676; --accent: #d9480f; --line: #e7e1d8;
-      color-scheme: light dark;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #14121a; --fg: #f1ede6; --muted: #a39cae; --accent: #ff8a4c; --line: #2a2633; }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; display: grid; place-items: center;
-      background: var(--bg); color: var(--fg);
-      font: 17px/1.65 ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    main { width: min(560px, 100% - 48px); padding: 64px 0; }
-    .avatar { width: 96px; height: 96px; border-radius: 50%; display: block; margin-bottom: 28px; background: var(--line); }
-    h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.02em; }
-    .role { margin: 0 0 28px; color: var(--muted); }
-    p { margin: 0 0 18px; }
-    .note { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 0.95rem; }
-    nav { display: flex; gap: 20px; margin-top: 32px; }
-    a { color: var(--accent); text-decoration: none; font-weight: 600; }
-    a:hover { text-decoration: underline; text-underline-offset: 3px; }
-    footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nolan Pierce — backend notes from floorplan to signoff</title>
+<meta name="description" content="Nolan Pierce is a digital IC physical design engineer in Los Angeles. Notes on place-and-route, clock trees, timing signoff, and the small tools he builds in public.">
+<meta property="og:title" content="Nolan Pierce — backend notes from floorplan to signoff">
+<meta property="og:description" content="Place-and-route, clock trees, and timing signoff notes, plus repos and tools, built in public.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <main>
-    <img class="avatar" src="https://github.com/nolanpix.png?size=192" alt="Nolan Pierce" width="96" height="96">
-    <h1>Nolan Pierce</h1>
-    <p class="role">Systems &amp; hardware tinkerer · Los Angeles</p>
-    <p>I turn weird late-night ideas into working prototypes, tiny tools, and the occasional bit of chaos. Everything here is built in public.</p>
-    <p class="note">This site is just getting started — projects and notes will land here soon.</p>
-    <nav>
-      <a href="https://github.com/nolanpix">GitHub</a>
-      <a href="https://x.com/nolanpierce_lab">X</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/"><span class="np">np.</span></a>
+    <nav class="navlinks">
+      <a href="#notes">notes</a>
+      <a href="#repos">repos</a>
+      <a href="#tools">tools</a>
+      <a href="#about">about</a>
     </nav>
-    <footer>© 2026 Nolan Pierce</footer>
-  </main>
+    <div class="right">
+      <a href="https://github.com/nolanpix" rel="me">GitHub</a>
+      <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow mono">DIE: <b>nolanpix</b> &nbsp; 860 x 420 um &nbsp; util 68%</p>
+    <h1 class="title">Backend notes, from <span class="grad">floorplan</span> to signoff.</h1>
+    <p class="lede">
+      I'm Nolan Pierce, a digital IC physical design engineer in Los Angeles
+      (P&amp;R, CTS, STA, signoff). This is my open notebook: short write-ups from the
+      back-end flow, the repos I publish, and small tools I build. Everything lands here
+      first. New here? The floorplan below is the map.
+    </p>
+
+    <div class="floor" aria-label="Site map, drawn as a chip floorplan">
+      <div class="floor-head mono">
+        <span>floorplan.def</span><span>4 blocks placed &middot; legal</span>
+      </div>
+      <div class="die">
+        <a class="block" href="#notes">
+          <span class="pin"></span>
+          <span class="tag mono">BLOCK A</span>
+          <h3>Notes</h3>
+          <p>Write-ups on placement, CTS, timing closure and signoff. Newest first.</p>
+        </a>
+        <a class="block" href="#repos">
+          <span class="pin"></span>
+          <span class="tag mono">BLOCK B</span>
+          <h3>Repos</h3>
+          <p>Open-source scripts and experiments, published on GitHub as they're ready.</p>
+        </a>
+        <a class="block" href="#tools">
+          <span class="pin"></span>
+          <span class="tag mono">BLOCK C</span>
+          <h3>Tools</h3>
+          <p>Tiny single-purpose utilities for Tcl/Python flows and log wrangling.</p>
+        </a>
+        <a class="block" href="#about">
+          <span class="pin"></span>
+          <span class="tag mono">BLOCK D</span>
+          <h3>About &amp; how to use</h3>
+          <p>Who I am, what's here, and the fastest way to find something useful.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="notes">
+    <div class="band-head">
+      <h2>Latest notes</h2>
+      <span class="count mono">3 posts</span>
+    </div>
+    <div class="notes">
+
+      <a class="note-row" href="notes/macro-placement-fast-repair.html">
+        <time class="mono" datetime="2026-11-24">2026-11-24</time>
+        <span class="n-title">Macro placement: fast local repair beats raw wirelength</span>
+        <span class="n-sum">What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality checks.</span>
+        <span class="n-tags"><span class="chip">placement</span><span class="chip">congestion</span><span class="chip">legality</span></span>
+      </a>
+
+      <a class="note-row" href="notes/structuring-eco-work.html">
+        <time class="mono" datetime="2026-11-22">2026-11-22</time>
+        <span class="n-title">Structuring complex ECO work around three gates</span>
+        <span class="n-sum">One driver on the fixes, read-only workers for search and diff audits, and heavy review only at plan-lock, the second repeated error, and final signoff.</span>
+        <span class="n-tags"><span class="chip">ECO</span><span class="chip">scripting</span><span class="chip">workflow</span></span>
+      </a>
+
+      <a class="note-row" href="notes/rtl2gds-timing-closed.html">
+        <time class="mono" datetime="2026-11-20">2026-11-20</time>
+        <span class="n-title">RTL2GDS: synthesis is the easy half</span>
+        <span class="n-sum">Getting a clean, timing-closed GDSII out the far side is where most flows fall apart. A field guide to where they break, from a leaderboard-watching habit.</span>
+        <span class="n-tags"><span class="chip">RTL2GDS</span><span class="chip">signoff</span><span class="chip">timing</span></span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="band" id="repos">
+    <div class="band-head">
+      <h2>Repos</h2>
+      <span class="count mono">building in public</span>
+    </div>
+    <div class="repos">
+      <a class="repo live" href="https://github.com/nolanpix">
+        <span class="r-name"><span class="dot"></span>nolanpix.github.io</span>
+        <p>This site. Static HTML, no build step. The source is open if it's useful to you.</p>
+        <span class="r-foot mono">HTML &middot; MIT</span>
+      </a>
+      <a class="repo" href="https://github.com/nolanpix">
+        <span class="r-name"><span class="dot"></span>flow-snippets</span>
+        <p>Tcl and Python snippets for P&amp;R and signoff chores. Publishing as they're cleaned up.</p>
+        <span class="r-foot mono">coming soon</span>
+      </a>
+      <a class="repo" href="https://github.com/nolanpix">
+        <span class="r-name"><span class="dot"></span>log-lens</span>
+        <p>A small log parser for Innovus / PrimeTime runs: surface WNS, TNS and DRC deltas.</p>
+        <span class="r-foot mono">coming soon</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="band" id="tools">
+    <div class="band-head"><h2>Tools</h2><span class="count mono">tiny &amp; single-purpose</span></div>
+    <p class="lede" style="margin-bottom:6px">
+      Little utilities too small for a repo of their own live here as they appear:
+      report diffs, constraint sanity checks, a timing-path pretty-printer. Nothing yet
+      is polished enough to link &mdash; check back, or follow along on
+      <a href="https://x.com/nolanpierce_lab">X</a>.
+    </p>
+  </section>
+
+  <section class="band" id="about">
+    <div class="band-head"><h2>About &amp; how to use this site</h2></div>
+    <p class="lede">
+      I design the physical back end of digital chips &mdash; turning a synthesized
+      netlist into a placed, clocked, routed, timing-closed layout. I'm also always
+      reading around the edges: RTL, synthesis, DFT, verification, and packaging.
+    </p>
+    <p class="lede">
+      How to use it: skim <a href="#notes">Latest notes</a> for a specific technique,
+      open a <a href="#repos">repo</a> if you want running code, and ignore the rest.
+      Posts are short and practical &mdash; one idea, what I tried, what actually worked.
+      If a note saves you an afternoon, that's the whole point.
+    </p>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>&copy; 2026 Nolan Pierce &middot; built in public</span>
+    <span class="sep"></span>
+    <a href="https://github.com/nolanpix">GitHub</a>
+    <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>
+  </div>
+</footer>
+
 </body>
 </html>

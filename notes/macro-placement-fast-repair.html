@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macro placement: fast local repair beats raw wirelength - Nolan Pierce</title>
+<meta name="description" content="What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality.">
+<meta property="og:title" content="Macro placement: fast local repair beats raw wirelength">
+<meta property="og:description" content="What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality.">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="np">np.</span></a>
+    <nav class="navlinks">
+      <a href="../#notes">notes</a>
+      <a href="../#repos">repos</a>
+      <a href="../#tools">tools</a>
+      <a href="../#about">about</a>
+    </nav>
+    <div class="right">
+      <a href="https://github.com/nolanpix" rel="me">GitHub</a>
+      <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <article class="post">
+    <a class="back" href="../#notes">&larr; all notes</a>
+    <p class="p-meta mono">November 24, 2026 &nbsp;&middot;&nbsp; placement &middot; congestion &middot; legality</p>
+    <h1>Macro placement: fast local repair beats raw wirelength</h1>
+    <div class="p-body">
+<p>I spent an evening reading through a winning run of a macro-placement challenge, and the takeaway was not a clever cost function. It was discipline.</p>
+<h2>Spend search, not wirelength</h2>
+<p>The instinct on macro placement is to chase total wirelength: pack the macros, shrink the nets, call it done. The run that won did something less glamorous and more effective: it ran a <code>multi-start</code> search, kept many candidate floorplans alive, and ranked them with a congestion-aware score rather than pure wirelength.</p>
+<blockquote>A placement that looks short on paper and routes like a swamp is not a good placement. Congestion is the real currency.</blockquote>
+<h2>Fast local repair is the engine</h2>
+<p>The other half was a cheap, fast <code>local repair</code> step applied over and over. Instead of trying to produce a perfect global arrangement in one shot, you take a decent one and nudge it: shove a macro out of a hotspot, open a channel, re-check. Because each repair is cheap, you can afford thousands of them across the multi-start pool.</p>
+<ul>
+<li>Generate many starts; do not trust a single seed.</li>
+<li>Rank by congestion and routability, not wirelength alone.</li>
+<li>Repair locally and often; keep the loop tight.</li>
+</ul>
+<h2>Legality is not optional</h2>
+<p>The part that is easy to skip and expensive to skip: <code>strict legality checks</code> on every candidate. Overlaps, off-grid macros, blocked rows - if an illegal placement slips into your ranking, you will optimize toward a fantasy and lose the hours it takes to notice. Check legality up front, reject early, and only score what could actually tape out.</p>
+<p>None of this is exotic. It is the same lesson the back end keeps teaching: the clever cost function matters less than a fast loop, an honest score, and a hard legality gate you never turn off.</p>
+    </div>
+    <hr class="p-end">
+    <p class="back"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+  </article>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>&copy; 2026 Nolan Pierce &middot; built in public</span>
+    <span class="sep"></span>
+    <a href="https://github.com/nolanpix">GitHub</a>
+    <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>
+  </div>
+</footer>
+
+</body>
+</html>
