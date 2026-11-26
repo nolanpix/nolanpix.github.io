@@ -406,31 +406,134 @@ function dashboardClient() {
   'use strict';
   const $=id=>document.getElementById(id), num=n=>Number(n).toLocaleString('en-US');
   const zh=()=>document.documentElement.dataset.lang!=='en', t=(z,e)=>zh()?z:e;
-  let lastData=null, lastNotice=null;
+  let lastData=null, lastNotice=null, filter=null, active=null;
   const say=(z,e)=>{lastNotice=[z,e];$('notice').textContent=t(z,e);};
   const make=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
   const svg=(tag,attrs={})=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [name,val] of Object.entries(attrs))el.setAttribute(name,val);return el;};
   const paint=(tag,parent,attrs,text)=>{const el=svg(tag,attrs);if(text!=null)el.textContent=text;parent.append(el);return el;};
+  const pct=(n,d)=>{if(!d)return '—';const v=100*n/d;return (v>0&&v<10?v.toFixed(1):String(Math.round(v)))+'%';};
+  const signed=(a,b)=>(a>b?'+':a<b?'−':'±')+pct(Math.abs(a-b),b);
+  const avg=(n,k)=>(k?n/k:0).toFixed(1);
+  const WD=()=>zh()?['周日','周一','周二','周三','周四','周五','周六']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weekday=day=>WD()[new Date(day+'T00:00:00Z').getUTCDay()];
   let days=30, serial=0, pending=null, last=null, lastTime=0, leaving=false;
   const offset=()=>-new Date().getTimezoneOffset();
   function time(ms,off){return new Date(ms+off*60000).toISOString().slice(0,19).replace('T',' ');}
   function table(title,heads,rows){const t=make('table'),caption=make('caption',title);caption.className='adm-sr';t.append(caption);const thr=t.createTHead().insertRow();for(const h of heads){const c=make('th',h);c.scope='col';thr.append(c);}const body=t.createTBody();for(const row of rows){const tr=body.insertRow();for(const val of row){tr.insertCell().textContent=val;}}return t;}
-  function chart(rows){const w=700,h=182,x0=42,x1=w-18,y0=16,y1=h-29;const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':t('每日页面浏览量与每日访客数','Daily page views and daily visitors')});const top=Math.max(1,...rows.map(r=>r.views),...rows.map(r=>r.visitors));const x=i=>x0+(x1-x0)*i/Math.max(1,rows.length-1), y=n=>y1-(y1-y0)*n/top;
+
+  // One hover card for the whole report. Text only (textContent), positioned through CSSOM, so the CSP needs no inline styles.
+  const tip=make('div');tip.className='adm-tip';tip.hidden=true;tip.setAttribute('role','status');tip.setAttribute('aria-live','polite');document.body.append(tip);
+  function showTip(owner,clear,title,rows,tags,x,y){
+    active={owner,clear};tipY=scrollY;
+    const head=make('p',title);head.className='adm-tip-head';const dl=make('dl');
+    for(const [k,v] of rows)dl.append(make('dt',k),make('dd',v));
+    const parts=[head,dl];
+    if(tags.length){const p=make('p');p.className='adm-tip-tags';for(const s of tags)p.append(make('span',s));parts.push(p);}
+    tip.replaceChildren(...parts);tip.hidden=false;
+    const pad=10,w=tip.offsetWidth,h=tip.offsetHeight;let left=x+16,top=y+16;
+    if(left+w>innerWidth-pad)left=x-16-w;if(left<pad)left=pad;if(top+h>innerHeight-pad)top=y-16-h;if(top<pad)top=pad;
+    tip.style.left=left+'px';tip.style.top=top+'px';
+  }
+  function hideTip(owner){if(active&&owner&&active.owner!==owner)return;tip.hidden=true;active=null;}
+  document.addEventListener('pointerdown',e=>{if(active&&!active.owner.contains(e.target))active.clear();},true);
+  let tipY=0;addEventListener('scroll',()=>{if(active&&Math.abs(scrollY-tipY)>24)active.clear();},{passive:true});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&active)active.clear();});
+  function screenPoint(root,px,py){const m=root.getScreenCTM();if(!m)return {x:0,y:0};const p=root.createSVGPoint();p.x=px;p.y=py;const s=p.matrixTransform(m);return {x:s.x,y:s.y};}
+  function svgPoint(root,e){const m=root.getScreenCTM();if(!m)return {x:0,y:0};const p=root.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(m.inverse());}
+
+  function chart(rows,tracked){const w=700,h=182,x0=42,x1=w-18,y0=16,y1=h-29;const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,role:'img',tabindex:'0','aria-label':t('每日页面浏览量与每日访客数。悬停、轻点或用左右方向键逐日查看详情。','Daily page views and daily visitors. Hover, tap or use the arrow keys for each day.')});const top=Math.max(1,...rows.map(r=>r.views),...rows.map(r=>r.visitors));const x=i=>x0+(x1-x0)*i/Math.max(1,rows.length-1), y=n=>y1-(y1-y0)*n/top;
     for(const val of new Set([0,Math.round(top/2),top])){paint('line',root,{x1:x0,x2:x1,y1:y(val),y2:y(val),class:'adm-grid'});paint('text',root,{x:x0-7,y:y(val)+4,'text-anchor':'end'},num(val));}
     for(const [field,cl] of [['views','adm-line-pv'],['visitors','adm-line-uv']]){const d=rows.map((r,i)=>i?`H ${x(i).toFixed(1)} V ${y(r[field]).toFixed(1)}`:`M ${x0} ${y(r[field]).toFixed(1)}`).join(' ');paint('path',root,{d,class:cl,fill:'none','vector-effect':'non-scaling-stroke'});}
-    if(rows.length){for(const i of new Set([0,Math.floor(rows.length/2),rows.length-1]))paint('text',root,{x:x(i),y:h-6,'text-anchor':i===0?'start':i===rows.length-1?'end':'middle'},rows[i].day.slice(5));}return root;
+    if(rows.length){for(const i of new Set([0,Math.floor(rows.length/2),rows.length-1]))paint('text',root,{x:x(i),y:h-6,'text-anchor':i===0?'start':i===rows.length-1?'end':'middle'},rows[i].day.slice(5));}
+    if(!rows.length)return root;
+    const guide=paint('line',root,{class:'adm-guide',y1:y0-6,y2:y1,visibility:'hidden'});
+    const dotPv=paint('circle',root,{r:4.5,class:'adm-dot-pv',visibility:'hidden'}),dotUv=paint('circle',root,{r:3.5,class:'adm-dot-uv',visibility:'hidden'});
+    paint('rect',root,{x:x0-8,y:0,width:x1-x0+16,height:h,fill:'transparent'});
+    const total=rows.reduce((n,r)=>n+r.views,0),peak=Math.max(...rows.map(r=>r.views));let cur=-1;
+    function card(i){const r=rows[i],p=rows[i-1],list=[[t('页面浏览','Page views'),num(r.views)],[t('访客','Visitors'),num(r.visitors)],[t('每访客浏览','Views / visitor'),r.visitors?avg(r.views,r.visitors):'—'],[t('占本期浏览','Share of window'),pct(r.views,total)]];
+      if(p){const d=r.views-p.views;list.push([t('较前一日','vs previous day'),(d>0?'+':d<0?'−':'±')+num(Math.abs(d))+(p.views?` (${signed(r.views,p.views)})`:'')]);}
+      const tags=[];if(r.day<tracked)tags.push(t('当时尚未开始记录','Before tracking began'));if(i===rows.length-1)tags.push(t('今天 · 仍在统计','Today · still counting'));if(peak&&r.views===peak)tags.push(t('本期峰值','Peak of window'));
+      return [`${r.day} · ${weekday(r.day)}`,list,tags];}
+    function clear(){cur=-1;for(const el of [guide,dotPv,dotUv])el.setAttribute('visibility','hidden');hideTip(root);}
+    function select(i,cx,cy){cur=Math.max(0,Math.min(rows.length-1,i));const X=x(cur);
+      for(const [el,a] of [[guide,{x1:X,x2:X}],[dotPv,{cx:X,cy:y(rows[cur].views)}],[dotUv,{cx:X,cy:y(rows[cur].visitors)}]]){for(const [k,v] of Object.entries(a))el.setAttribute(k,v);el.setAttribute('visibility','visible');}
+      const at=cx==null?screenPoint(root,X,y(rows[cur].views)):{x:cx,y:cy};showTip(root,clear,...card(cur),at.x,at.y);}
+    const index=e=>Math.round((svgPoint(root,e).x-x0)/((x1-x0)/Math.max(1,rows.length-1)));
+    root.addEventListener('pointermove',e=>select(index(e),e.clientX,e.clientY));
+    root.addEventListener('pointerdown',e=>select(index(e),e.clientX,e.clientY));
+    root.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});
+    root.addEventListener('focus',()=>{if(cur<0)select(rows.length-1);});
+    root.addEventListener('blur',clear);
+    root.addEventListener('keydown',e=>{const step={ArrowLeft:-1,ArrowRight:1}[e.key],base=cur<0?rows.length-1:cur;
+      if(step){e.preventDefault();select(base+step);}else if(e.key==='Home'){e.preventDefault();select(0);}else if(e.key==='End'){e.preventDefault();select(rows.length-1);}});
+    return root;
   }
-  function heatMap(hours){const names=zh()?['周日','周一','周二','周三','周四','周五','周六']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const map=new Map(hours.map(r=>[r.weekday*24+r.hour,r.views])),max=Math.max(1,...hours.map(h=>h.views));const root=svg('svg',{viewBox:'0 0 678 143',role:'img','aria-label':t('按星期和小时统计的访问强度，颜色越深访问越多','Traffic intensity by weekday and hour; darker accent means more visits')});
+
+  function heatMap(hours){const names=WD();const map=new Map(hours.map(r=>[r.weekday*24+r.hour,r.views])),max=Math.max(1,...hours.map(h=>h.views)),total=hours.reduce((n,h)=>n+h.views,0);
+    const all=[];for(let k=0;k<168;k++)all.push(map.get(k)||0);
+    const root=svg('svg',{viewBox:'0 0 678 143',role:'img',tabindex:'0','aria-label':t('按星期和小时统计的访问强度，颜色越深访问越多。悬停、轻点或用方向键查看每个时段。','Traffic intensity by weekday and hour; darker accent means more visits. Hover, tap or use the arrow keys for each slot.')});
     for(let h=0;h<24;h+=3)paint('text',root,{x:46+h*26,y:12},String(h).padStart(2,'0'));
-    for(let j=0;j<7;j++){const day=(j+1)%7;paint('text',root,{x:0,y:31+j*16},names[day]);for(let h=0;h<24;h++){const n=map.get(day*24+h)||0;const cell=paint('rect',root,{x:46+h*26,y:21+j*16,width:23,height:12,rx:2,class:'adm-level-'+(n?Math.ceil(4*n/max):0)});paint('title',cell,{},`${names[day]} ${String(h).padStart(2,'0')}:00 · ${t(n+' 次浏览',n+' views')}`);}}return root;}
-  function render(d){lastData=d;const tt=d.totals;for(const [id,value] of Object.entries({views:num(tt.views),visitorDays:num(tt.visitorDays),average:tt.visitorDays?(tt.views/tt.visitorDays).toFixed(1):'—',today:num(tt.todayViews)+' / '+num(tt.todayVisitors)}))$('v-'+id).textContent=value;
+    const cells=[];
+    for(let j=0;j<7;j++){const day=(j+1)%7;paint('text',root,{x:0,y:31+j*16},names[day]);cells.push([]);for(let h=0;h<24;h++){const n=map.get(day*24+h)||0;cells[j].push(paint('rect',root,{x:46+h*26,y:21+j*16,width:23,height:12,rx:2,'data-j':j,'data-h':h,class:'adm-level-'+(n?Math.ceil(4*n/max):0)}));}}
+    let cj=-1,ch=-1;
+    function clear(){cj=ch=-1;root.classList.remove('is-hl');for(const row of cells)for(const c of row)c.classList.remove('is-on','is-cur');hideTip(root);}
+    function select(j,h,cx,cy){cj=(j+7)%7;ch=(h+24)%24;const day=(cj+1)%7,n=map.get(day*24+ch)||0;
+      root.classList.add('is-hl');cells.forEach((row,r)=>row.forEach((c,k)=>{c.classList.toggle('is-on',r===cj||k===ch);c.classList.toggle('is-cur',r===cj&&k===ch);}));
+      let dayTotal=0,hourTotal=0;for(let k=0;k<24;k++)dayTotal+=map.get(day*24+k)||0;for(let d=0;d<7;d++)hourTotal+=map.get(d*24+ch)||0;
+      const hh=String(ch).padStart(2,'0'),next=String((ch+1)%24).padStart(2,'0'),rank=1+all.filter(v=>v>n).length;
+      const list=[[t('浏览','Views'),num(n)],[t('占本期','Share of window'),pct(n,total)],[t('排名','Rank'),n?t(`第 ${rank} / 168`,`#${rank} of 168`):'—'],[t(`${names[day]}全天`,`All ${names[day]}`),num(dayTotal)],[t(`每周 ${hh} 时合计`,`${hh}:00 across the week`),num(hourTotal)]];
+      const tags=n&&n===max?[t('最活跃时段','Busiest slot')]:[];
+      const at=cx==null?screenPoint(root,46+ch*26+23,21+cj*16):{x:cx,y:cy};showTip(root,clear,`${names[day]} ${hh}:00–${next}:00`,list,tags,at.x,at.y);}
+    const fromEvent=e=>{const j=e.target.getAttribute&&e.target.getAttribute('data-j');if(j!==null&&j!==undefined&&e.target.tagName==='rect')select(+j,+e.target.getAttribute('data-h'),e.clientX,e.clientY);};
+    root.addEventListener('pointermove',fromEvent);root.addEventListener('pointerdown',fromEvent);
+    root.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});
+    root.addEventListener('focus',()=>{if(cj<0){let best=0;for(let k=1;k<168;k++)if(all[k]>all[best])best=k;select((Math.floor(best/24)+6)%7,best%24);}});
+    root.addEventListener('blur',clear);
+    root.addEventListener('keydown',e=>{const mv={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(mv){e.preventDefault();select((cj<0?0:cj)+mv[0],(ch<0?0:ch)+mv[1]);}});
+    return root;
+  }
+
+  function spark(values,cls){const w=120,h=24,top=Math.max(1,...values),root=svg('svg',{class:'adm-spark '+cls,viewBox:`0 0 ${w} ${h}`,'aria-hidden':'true',preserveAspectRatio:'none'});
+    const x=i=>w*i/Math.max(1,values.length-1);paint('path',root,{d:values.map((v,i)=>`${i?'L':'M'} ${x(i).toFixed(1)} ${(h-2-(h-4)*v/top).toFixed(1)}`).join(' '),'vector-effect':'non-scaling-stroke'});return root;}
+  const peakOf=(rows,f)=>rows.reduce((b,r)=>r[f]>(b?b[f]:0)?r:b,null);
+  const KPI={
+    views:d=>{const r=d.trend,tt=d.totals,pk=peakOf(r,'views'),prev=tt.previousViews;return [t('页面浏览量','Page views'),[[t('本期合计','Window total'),num(tt.views)],[t('日均','Daily average'),avg(tt.views,r.length)],[t('峰值日','Peak day'),pk?`${pk.day.slice(5)} · ${num(pk.views)}`:'—'],[t('较上一时段','vs prior window'),prev===null?t('数据不完整','not fully tracked'):prev?signed(tt.views,prev):(tt.views?t('上一时段为 0','prior window: 0'):'±0%')]],[]];},
+    visitorDays:d=>{const r=d.trend,tt=d.totals,pk=peakOf(r,'visitors');return [t('访客天数','Visitor-days'),[[t('本期合计','Window total'),num(tt.visitorDays)],[t('日均访客','Daily visitors'),avg(tt.visitorDays,r.length)],[t('峰值日','Peak day'),pk?`${pk.day.slice(5)} · ${num(pk.visitors)}`:'—'],[t('有访客的天数','Days with visitors'),`${r.filter(x=>x.visitors).length} / ${r.length}`]],[t('跨天不去重','Not de-duplicated across days')]];},
+    average:d=>{const r=d.trend.filter(x=>x.visitors),tt=d.totals,best=r.reduce((b,x)=>!b||x.views/x.visitors>b.views/b.visitors?x:b,null);return [t('每访客天浏览','Views / visitor-day'),[[t('本期','Window'),tt.visitorDays?avg(tt.views,tt.visitorDays):'—'],[t('最深的一天','Deepest day'),best?`${best.day.slice(5)} · ${avg(best.views,best.visitors)}`:'—'],[t('计算方式','Formula'),t('浏览 ÷ 访客天数','views ÷ visitor-days')]],[]];},
+    today:d=>{const r=d.trend,tt=d.totals,others=r.length>1?(tt.views-tt.todayViews)/(r.length-1):0;return [t('今日','Today'),[[t('浏览','Views'),num(tt.todayViews)],[t('访客','Visitors'),num(tt.todayVisitors)],[t('本期其他日日均','Other days, average'),others.toFixed(1)],[t('相比日均','vs that average'),others?signed(tt.todayViews,others):'—']],[t('今天尚未结束','Day still in progress')]];}
+  };
+  document.querySelectorAll('.adm-kpis > div').forEach(card=>{const id=card.querySelector('strong')?.id.slice(2);if(!KPI[id])return;card.tabIndex=0;
+    const clear=()=>hideTip(card),open=()=>{if(!lastData)return;const r=card.getBoundingClientRect();showTip(card,clear,...KPI[id](lastData),r.left-16,r.bottom-10);};
+    card.addEventListener('pointerenter',open);card.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});card.addEventListener('pointerdown',open);card.addEventListener('focus',open);card.addEventListener('blur',clear);});
+
+  const RANK={paths:['页面','Page',e=>e.path],entries:['入口页','Entry page',e=>e.first_visit?e.path:null],referrers:['来源域名','Referrer',e=>e.ref],countries:['国家/地区','Country',e=>e.country],devices:['设备','Device',e=>e.device],browsers:['浏览器','Browser',e=>e.browser],systems:['操作系统','OS',e=>e.os]};
+  function renderRanks(d){for(const [k,list] of Object.entries(d.ranks)){const ol=$('rank-'+k);if(!ol||!RANK[k])continue;
+    const top=Math.max(1,...list.map(r=>r.n)),base=k==='entries'?d.totals.visitorDays:d.totals.views;
+    const items=list.map((r,i)=>{const li=make('li'),b=make('button');b.type='button';b.className='adm-rank';b.setAttribute('aria-controls','event-log');
+      const on=!!filter&&filter.key===k&&filter.label===r.label;b.setAttribute('aria-pressed',String(on));b.style.setProperty('--share',(100*r.n/top).toFixed(1)+'%');
+      b.append(make('span',r.label),make('b',num(r.n)));
+      const clear=()=>hideTip(b),open=e=>{const rect=b.getBoundingClientRect(),X=e&&e.clientX!=null?e.clientX:rect.left,Y=e&&e.clientY!=null?e.clientY:rect.bottom-10;
+        showTip(b,clear,r.label,[[t(k==='entries'?'首访进入':'浏览',k==='entries'?'Landings':'Views'),num(r.n)],[t(k==='entries'?'占当日首访':'占本期浏览',k==='entries'?'Share of landings':'Share of window'),pct(r.n,base)],[t('排名','Rank'),t(`第 ${i+1} / ${list.length}`,`#${i+1} of ${list.length}`)]],[on?t('再次点击取消筛选','Click again to clear the filter'):t('点击后在下方访问日志中筛选','Click to filter the visit log below')],X,Y);};
+      b.addEventListener('pointerenter',open);b.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});b.addEventListener('focus',()=>open());b.addEventListener('blur',clear);
+      b.addEventListener('click',()=>{filter=on?null:{key:k,label:r.label};hideTip();renderRanks(d);renderEvents(d);if(!on&&b.isConnected)b.focus();else{const again=[...document.querySelectorAll('.adm-rank')].find(x=>x.textContent===b.textContent);again?.focus();}});
+      li.append(b);return li;});
+    ol.replaceChildren(...(items.length?items:[make('li',t('这个时间范围内没有访问。','No visits in this window.'))]));}}
+  function renderEvents(d){const box=$('event-log'),match=filter?RANK[filter.key][2]:null;
+    const rows=filter?d.events.filter(e=>match(e)===filter.label):d.events,parts=[];
+    if(filter){const bar=make('p');bar.className='adm-filter';const clear=make('button',t('清除筛选','Clear filter'));clear.type='button';clear.className='adm-plain';
+      clear.addEventListener('click',()=>{filter=null;renderRanks(d);renderEvents(d);});
+      bar.append(make('span',t(`筛选：${RANK[filter.key][0]} = ${filter.label} · 最近 ${d.events.length} 条中有 ${rows.length} 条`,`Filter: ${RANK[filter.key][1]} = ${filter.label} · ${rows.length} of the latest ${d.events.length}`)),clear);parts.push(bar);}
+    parts.push(rows.length?table(t('最近访问','Recent visits'),t(['时间','页面','来源','国家/地区','设备 / 浏览器 / 系统','今日首访'],['Time','Page','Source','Country','Device / browser / OS','First today']),rows.map(e=>[time(e.at,d.offset),e.path,e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?t('是','Yes'):'—'])):make('p',filter?t('最近的访问中没有符合筛选的记录。','No recent visits match this filter.'):t('这个时间范围内没有访问记录。','No visits recorded in this window.')));
+    box.replaceChildren(...parts);}
+
+  function render(d){if(active)active.clear();lastData=d;const tt=d.totals;for(const [id,value] of Object.entries({views:num(tt.views),visitorDays:num(tt.visitorDays),average:tt.visitorDays?(tt.views/tt.visitorDays).toFixed(1):'—',today:num(tt.todayViews)+' / '+num(tt.todayVisitors)}))$('v-'+id).textContent=value;
+    for(const [id,field,cls] of [['views','views','pv'],['visitorDays','visitors','uv']]){const card=$('v-'+id).parentElement;card.querySelector('.adm-spark')?.remove();card.append(spark(d.trend.map(r=>r[field]),cls));}
     const since=time(d.trackedSince,d.offset).slice(0,10);
     const delta=tt.previousViews===null?t('上一时段的数据不完整。','Prior window not fully tracked.'):t(`上一时段 ${num(tt.previousViews)} 次浏览。`,`${num(tt.previousViews)} views in prior window.`);
     $('coverage').textContent=t(`累计 ${num(d.lifetimeViews)} 次页面浏览。自 ${since} 起记录详细数据。${delta}访客天数是每日访客数之和，不是跨天去重后的人数。`,`${num(d.lifetimeViews)} all-time page views. Detailed tracking since ${since}. ${delta} Visitor-days sum daily visitors; not distinct people across days.`);
-    $('wave').replaceChildren(chart(d.trend));$('daily-values').replaceChildren(table(t('每日合计','Daily totals'),t(['日期','浏览','访客'],['Date','Views','Visitors']),d.trend.map(r=>[r.day,num(r.views),num(r.visitors)])));
+    $('wave').replaceChildren(chart(d.trend,since));$('daily-values').replaceChildren(table(t('每日合计','Daily totals'),t(['日期','浏览','访客'],['Date','Views','Visitors']),d.trend.map(r=>[r.day,num(r.views),num(r.visitors)])));
     $('heat').replaceChildren(heatMap(d.hours));
-    for(const [k,list] of Object.entries(d.ranks)){const ol=$('rank-'+k);if(!ol)continue;const entries=list.map(r=>{const li=make('li');li.append(make('span',r.label),make('b',num(r.n)));return li;});ol.replaceChildren(...(entries.length?entries:[make('li',t('这个时间范围内没有访问。','No visits in this window.'))]));}
-    $('event-log').replaceChildren(d.events.length?table(t('最近访问','Recent visits'),t(['时间','页面','来源','国家/地区','设备 / 浏览器 / 系统','今日首访'],['Time','Page','Source','Country','Device / browser / OS','First today']),d.events.map(e=>[time(e.at,d.offset),e.path,e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?t('是','Yes'):'—'])):make('p',t('这个时间范围内没有访问记录。','No visits recorded in this window.')));
+    renderRanks(d);renderEvents(d);
     $('report-data').hidden=false;const sign=d.offset<0?'−':'+';const minutes=Math.abs(d.offset);const zone=`UTC${sign}${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`,at=time(d.updated,d.offset).slice(11);say(`${d.days} 天范围 · ${zone} · 更新于 ${at}`,`${d.days}-day window · ${zone} · Updated ${at}`);
     document.querySelectorAll('[data-days]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.days===d.days)));
   }

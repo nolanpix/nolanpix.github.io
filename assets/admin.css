@@ -35,7 +35,7 @@
 .adm-caption { margin: 10px 0 26px; }
 .adm-panel { margin-bottom: 18px; padding: clamp(14px,2.5vw,25px); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
 .adm-panel > header { align-items: center; margin-bottom: 18px; }
-.adm-key { margin: 0; }.adm-key i { display: inline-block; width: 15px; height: 3px; vertical-align: middle; background: var(--accent); }.adm-key i:nth-child(2) { background: var(--fg); }
+.adm-key { margin: 0; }.adm-key i { display: inline-block; width: 15px; height: 3px; vertical-align: middle; background: var(--accent); }.adm-key i:nth-of-type(2) { height: 2px; background: repeating-linear-gradient(90deg, var(--fg) 0 5px, transparent 5px 8px); }
 .adm-panel svg { display: block; width: 100%; max-height: 260px; overflow: visible; }
 .adm-panel svg text { fill: var(--muted); font: 11px var(--adm-mono); }
 .adm-grid { stroke: var(--line); stroke-dasharray: 3 4; }.adm-line-pv { stroke: var(--accent); stroke-width: 2.6; }.adm-line-uv { stroke: var(--fg); stroke-width: 1.4; stroke-dasharray: 5 3; }
@@ -56,3 +56,34 @@
 .adm-body .pref:hover { color: var(--fg); border-color: var(--faint); }
 .adm-top .adm-back { white-space: nowrap; }
 @media(max-width:520px) { .adm-top > div { gap: 9px; } .adm-top .brand > span:last-child, .adm-part { display: none; } }
+
+/* ---- Interactive report: one hover card, chart guides, highlights (dashboardClient) ---- */
+.adm-tip { position: fixed; z-index: 30; left: 0; top: 0; max-width: min(300px, calc(100vw - 20px)); padding: 10px 12px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); box-shadow: 0 10px 28px color-mix(in srgb, var(--bg) 70%, transparent); pointer-events: none; font: .78rem/1.45 var(--adm-mono); }
+.adm-tip[hidden] { display: none; }
+.adm-tip-head { margin: 0 0 6px; font-weight: 600; color: var(--fg); }
+.adm-tip dl { display: grid; grid-template-columns: auto auto; gap: 2px 18px; margin: 0; }
+.adm-tip dt { color: var(--muted); }
+.adm-tip dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.adm-tip-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 0; }
+.adm-tip-tags span { padding: 1px 7px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); color: var(--accent); }
+.adm-panel svg[tabindex], .adm-kpis > div[tabindex] { outline: none; }
+.adm-panel svg[tabindex]:focus-visible, .adm-kpis > div[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+#wave svg { cursor: crosshair; touch-action: pan-y; }
+.adm-guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.adm-dot-pv { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
+.adm-dot-uv { fill: var(--fg); stroke: var(--panel); stroke-width: 2; }
+#heat svg rect { cursor: pointer; }
+#heat svg.is-hl rect:not(.is-on) { opacity: .32; }
+#heat svg rect.is-cur { stroke: var(--fg); stroke-width: 1.6; }
+.adm-kpis > div[tabindex] { cursor: default; }
+.adm-kpis > div[tabindex]:hover { background: color-mix(in srgb, var(--panel) 60%, transparent); }
+.adm-spark { display: block; width: 100%; max-width: 160px; height: 22px; margin-top: 8px; overflow: visible; }
+.adm-spark path { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.adm-spark.pv path { stroke: var(--accent); }
+.adm-spark.uv path { stroke: var(--fg); stroke-dasharray: 4 2; }
+.adm-ranks li:has(> .adm-rank) { padding: 0; }
+.adm-body .adm-rank { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; padding: 5px 6px; border: 1px solid transparent; border-radius: 5px; text-align: left; color: var(--muted); font: inherit; overflow-wrap: anywhere;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent) var(--share, 0%), transparent var(--share, 0%)) no-repeat; }
+.adm-body .adm-rank:hover { color: var(--fg); border-color: var(--line); }
+.adm-body .adm-rank[aria-pressed="true"] { color: var(--fg); border-color: var(--accent); background-color: color-mix(in srgb, var(--accent) 10%, transparent); }
+.adm-filter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 10px; padding: 7px 10px; border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius: 6px; font: .8rem/1.4 var(--adm-mono); color: var(--fg); }
