@@ -387,3 +387,19 @@ the nav, and the "what is this / how to use it" explainer in one object.
   - `/tmp/test_wksel/node/theme_transitions.mjs` 4 组：主站切浅色 + 英文后首页 → 文章 → 首页 → 404 → 长文、MBTI 往返、刷新，语言与色调均不跳变；404 的后台入口带 `theme&lang`。
   - 回归：`i18n.mjs` 11 组、`mbti_site.mjs` 5 组、`test_gen_notes.py` OK。
 - 上线：主站随 Pages；Worker 仍需站长手动部署，部署后主站 ↔ 后台的语言回传才生效。
+
+## 17. 改进策略（MBTI 页中英文共存，2026-11-27）
+
+- 需求（用户原话）：MBTI 的页面也需要做到可以中英文版共存；和站点其它页面一样，从哪个页面设置语言，跳到哪个页面都保持。
+- 归属：MBTI 的源码与构建在 `~/other_domains/psychology/mbti_self_test/`，站点仓库只放生成物 `mbti/index.html`；该项目的方案、实现与验证记录见它的 `plan_md_files/build_site_plan.md` §16。
+- 站点侧的变化：无脚本改动。MBTI 与站点同源，直接共用 `np:lang`：
+  - 进入 MBTI 时按 `np:lang` 显示中文或英文，页面右上角新增 EN/中文 按钮；切换写回 `np:lang`，站点的首页、文章、404 和已打开的标签页通过 `storage` 跟随。
+  - 主题仍沿用上一节的 `np:theme`；两个偏好互不影响。
+- 内容：题目、16 型文案、功能/维度/身份说明都增加英文 `en` 块；付费字段的英文也一起加密，公开数据只保留免费字段。构建会校验英文必填，缺内容拒绝生成。
+- 验证：
+  - MBTI 项目 `python3 tests/test_site.py` → OK（新增英文校验、英文付费泄露、公开数据剥离 `en` 付费字段的检查）。
+  - `/tmp/test_wksel/node/mbti_i18n.mjs` 7 组：默认中文；`np:lang=en` 全英文；测验中途切换语言且进度保留；结果/类型/详情/关于切换；真实解锁码解出英文付费详情；站点→MBTI→站点语言往返；英文分享图。
+  - 站点回归：`mbti_site.mjs` 5 组、`i18n.mjs` 11 组、`theme_transitions.mjs` 4 组（其中 MBTI 用例已改为“跟随站点的英文”）。
+  - 几何：1280/390 × 中英 × 首页/类型/详情/关于/结果，无横向溢出。
+- 边界：`og:title`/`og:description` 仍是中文（爬虫不执行 JS）；页面内标题和 meta description 会跟随语言。
+- 上线：`site/index.html` 覆盖 `mbti/index.html`，随 GitHub Pages 发布；当前线上 `lock.keys` 为 0，重建不会影响任何已购用户。
