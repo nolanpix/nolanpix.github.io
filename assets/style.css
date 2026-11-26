@@ -14,11 +14,25 @@
   --accent-b:#c0398f;
   --accent:  #ff6a52;
   --maxw: 860px;
-  color-scheme: dark light;
+  --cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC";
+  color-scheme: dark;
 }
 
+/* Light theme: chosen with the switch (data-theme, set by assets/prefs.js), or
+   the OS setting when no script runs (e.g. the admin pages served by the Worker). */
+:root[data-theme="light"] {
+  --bg:    #f3f5fa;
+  --panel:   #ffffff;
+  --panel-2: #eef1f8;
+  --fg:    #141824;
+  --muted:   #5c6478;
+  --faint:   #9aa1b4;
+  --line:  #dde2ee;
+  --accent:  #d8402a;
+  color-scheme: light;
+}
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme]) {
     --bg:      #f3f5fa;
     --panel:   #ffffff;
     --panel-2: #eef1f8;
@@ -27,8 +41,13 @@
     --faint:   #9aa1b4;
     --line:    #dde2ee;
     --accent:  #d8402a;
+    color-scheme: light;
   }
 }
+
+/* Each page carries both languages; only the active one is shown. */
+:root[data-lang="zh"] [lang="en"],
+:root[data-lang="en"] [lang="zh-CN"] { display: none !important; }
 
 * { box-sizing: border-box; }
 
@@ -39,7 +58,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font: 16.5px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, sans-serif;
+        "Helvetica Neue", Arial, var(--cjk), sans-serif;
   -webkit-font-smoothing: antialiased;
   /* Safari paints the selection highlight across the gaps between block
      siblings of body, flooding the side margins; a grid container does not.
@@ -73,7 +92,7 @@ a:hover { color: var(--accent); }
   font-weight: 700; font-size: 1.12rem; letter-spacing: -0.02em;
 }
 .brand .np {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   background: linear-gradient(120deg, var(--accent-a), var(--accent-b));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
@@ -92,7 +111,7 @@ a:hover { color: var(--accent); }
 }
 .eyebrow b { color: var(--accent); font-weight: 600; }
 h1.title {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: clamp(2rem, 5.2vw, 3.1rem);
   line-height: 1.07; letter-spacing: -0.025em; margin: 0 0 18px;
   max-width: 16ch;
@@ -156,7 +175,7 @@ h1.title .grad {
   font-size: 0.72rem; color: var(--faint); letter-spacing: 0.04em;
 }
 .block h3 {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 500; font-size: 1.12rem; margin: 6px 0 6px;
 }
 .block p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
@@ -177,7 +196,7 @@ section.band { padding: 46px 0 8px; }
   display: flex; align-items: baseline; gap: 12px; margin: 0 0 18px;
 }
 .band-head h2 {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em;
 }
 .band-head .count { color: var(--faint); font-size: 0.8rem; }
@@ -192,7 +211,7 @@ section.band { padding: 46px 0 8px; }
 .note-row:hover { background: color-mix(in srgb, var(--panel) 50%, transparent); }
 .note-row time { color: var(--faint); font-size: 0.82rem; }
 .note-row .n-title {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 500; font-size: 1.06rem;
 }
 .note-row .n-sum { grid-column: 2; color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
@@ -229,14 +248,14 @@ article.post { padding: 40px 0 10px; }
 .post .back { color: var(--muted); font-size: 0.88rem; }
 .post .p-meta { color: var(--faint); font-size: 0.82rem; margin: 22px 0 10px; }
 .post h1 {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.12;
   letter-spacing: -0.02em; margin: 0 0 14px;
 }
 .post .p-body { font-size: 1.04rem; line-height: 1.78; }
 .post .p-body > :first-child { margin-top: 0; }
 .post .p-body h2 {
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: 1.3rem; margin: 34px 0 10px; letter-spacing: -0.01em;
 }
 .post .p-body p { margin: 0 0 16px; }
@@ -295,3 +314,23 @@ article.post { padding: 40px 0 10px; }
 @media (max-width: 620px) {
   .statbar { left: 10px; bottom: 10px; padding: 6px 10px; font-size: 0.7rem; }
 }
+
+/* ---- theme / language switches (assets/prefs.js) ---- */
+.pref {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: 7px; background: transparent;
+  color: var(--muted); cursor: pointer;
+  font: 600 0.74rem/1 ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, var(--cjk), monospace;
+}
+.pref:hover { color: var(--fg); border-color: var(--faint); }
+.pref svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+:root:not([data-theme]) .pref { display: none; }  /* prefs.js did not run */
+:root[data-theme="dark"] .pref .i-sun,
+:root[data-theme="light"] .pref .i-moon { display: none; }
+
+/* ---- Chinese typography: no negative tracking, roomier headings, no faux italics ---- */
+:root:lang(zh) :is(h1, h2, h3, .n-title) { letter-spacing: 0; }
+:root:lang(zh) h1.title { line-height: 1.22; max-width: 12em; }
+:root:lang(zh) .post h1 { line-height: 1.32; }
+:root:lang(zh) em { font-style: normal; font-weight: 600; }

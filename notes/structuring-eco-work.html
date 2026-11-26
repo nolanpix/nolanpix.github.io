@@ -1,18 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" data-lang="zh" data-title-en="Structuring complex ECO work around three gates - Nolan Pierce">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Structuring complex ECO work around three gates - Nolan Pierce</title>
-<meta name="description" content="One driver on the fixes, read-only workers for audits, and heavy review at only three gates.">
-<meta property="og:title" content="Structuring complex ECO work around three gates">
-<meta property="og:description" content="One driver on the fixes, read-only workers for audits, and heavy review at only three gates.">
+<title>复杂 ECO 工作的组织方式：只设三道关卡 - Nolan Pierce</title>
+<meta name="description" content="修复只交给一个执行者，审计交给只读的协作者，重量级评审只放在三道关卡上。">
+<meta property="og:title" content="复杂 ECO 工作的组织方式：只设三道关卡">
+<meta property="og:description" content="修复只交给一个执行者，审计交给只读的协作者，重量级评审只放在三道关卡上。">
 <meta property="og:type" content="article">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/prefs.js"></script>
 </head>
 <body>
 
@@ -20,24 +21,42 @@
   <div class="wrap">
     <a class="brand" href="../"><span class="np">np.</span></a>
     <nav class="navlinks">
-      <a href="../#notes">notes</a>
-      <a href="../#repos">repos</a>
-      <a href="../#tools">tools</a>
-      <a href="../#about">about</a>
+      <a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">notes</span></a>
+      <a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">repos</span></a>
+      <a href="../#tools"><span lang="zh-CN">工具</span><span lang="en">tools</span></a>
+      <a href="../#about"><span lang="zh-CN">关于</span><span lang="en">about</span></a>
     </nav>
     <div class="right">
       <a href="https://github.com/nolanpix" rel="me">GitHub</a>
       <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+      <button class="pref" type="button" data-pref="lang"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+      <button class="pref" type="button" data-pref="theme"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
   <article class="post">
-    <a class="back" href="../#notes">&larr; all notes</a>
-    <p class="p-meta mono">November 22, 2026 &nbsp;&middot;&nbsp; ECO &middot; scripting &middot; workflow</p>
-    <h1>Structuring complex ECO work around three gates</h1>
-    <div class="p-body">
+    <a class="back" href="../#notes"><span lang="zh-CN">&larr; 全部笔记</span><span lang="en">&larr; all notes</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月22日 &nbsp;&middot;&nbsp; ECO &middot; 脚本 &middot; 工作流</span><span lang="en">November 22, 2026 &nbsp;&middot;&nbsp; ECO &middot; scripting &middot; workflow</span></p>
+    <h1><span lang="zh-CN">复杂 ECO 工作的组织方式：只设三道关卡</span><span lang="en">Structuring complex ECO work around three gates</span></h1>
+    <div class="p-body" lang="zh-CN">
+<p>大型 ECO 和重度依赖脚本的工作，崩溃的方式往往可以预料：所有东西都在改所有东西，没人说得清新出现的违例是哪次改动引起的；评审要么时时刻刻都在做（进度慢得像在爬），要么根本不做（最后交出一团乱麻）。下面是对我有效的组织方式。</p>
+<h2>一个执行者，多个只读协作者</h2>
+<p>负责修复的 <code>driver</code>（执行者）只有一个：改动只落在一个地方，只有一个人或一个进程拥有修改权。围绕它运行的是 <code>read-only workers</code>（只读协作者）：并行的搜索和差异审计，只看不改。它们负责回答问题（“这条线网还出现在哪里？”“这两次运行之间改了什么？”），但不往改动堆里添加自己的修改。</p>
+<p>关键是把改变状态的一方和只观察状态的各方分开。出问题时，你只有一个嫌疑对象，而不是十二个。</p>
+<h2>重量级评审只放在三道关卡</h2>
+<p>评审很贵，所以要花在回报最高的地方。三道关卡：</p>
+<ul>
+<li><code>Plan lock</code>（方案锁定）：动手修改之前，先就方案达成一致。过了这一点，方案就是契约；偏离方案要记录下来，而不是临场发挥。</li>
+<li><code>Second repeated error</code>（同类错误第二次出现）：第一次失败可以当作噪声。同一类错误<em>第二次</em>出现时，就该停下来评审——这说明错的是方法，而不是某个笔误。</li>
+<li><code>Final signoff</code>（最终签核）：最后对照锁定的方案，完整、仔细地过一遍，只做一次。</li>
+</ul>
+<p>关卡之间，放手让执行者跑。每个中间步骤都评审，只会把两小时的 ECO 拖成两天，却抓不到更多 bug。</p>
+<h2>为什么它站得住</h2>
+<p>这其实就是后端流程本身赖以运转的思路：改动只有唯一的真实来源，围绕它做低成本的并行观察，昂贵的检查集中放在几个精心挑选的检查点，而不是摊到每一步。</p>
+    </div>
+    <div class="p-body" lang="en">
 <p>Big ECO and script-heavy work falls apart in a predictable way: everything edits everything, nobody is sure which change caused the new violation, and review either happens constantly (and slows to a crawl) or never (and ships a mess). Here is the shape that has worked for me.</p>
 <h2>One driver, many read-only workers</h2>
 <p>There is exactly one <code>driver</code> making fixes - one place where edits land, one person or process that owns the mutation. Around it run <code>read-only workers</code>: parallel search and diff audits that look but never touch. They answer questions (&quot;where else does this net appear?&quot;, &quot;what changed between these two runs?&quot;) without adding their own edits to the pile.</p>
@@ -45,29 +64,23 @@
 <h2>Heavy review at three gates only</h2>
 <p>Review is expensive, so spend it where it pays off. Three gates:</p>
 <ul>
-<li><code>Plan lock</code> - before any edit, agree on the plan. After this point the plan is</li>
+<li><code>Plan lock</code> - before any edit, agree on the plan. After this point the plan is the contract; deviations get written down, not improvised.</li>
+<li><code>Second repeated error</code> - the first failure is noise. The <em>second</em> time the same class of error shows up, stop and review - it means the approach, not the typo, is wrong.</li>
+<li><code>Final signoff</code> - the full, careful pass, once, at the end, against the locked plan.</li>
 </ul>
-<p>the contract; deviations get written down, not improvised.</p>
-<ul>
-<li><code>Second repeated error</code> - the first failure is noise. The *second* time the same</li>
-</ul>
-<p>class of error shows up, stop and review - it means the approach, not the typo, is wrong.</p>
-<ul>
-<li><code>Final signoff</code> - the full, careful pass, once, at the end, against the locked</li>
-</ul>
-<p>plan.</p>
 <p>Between the gates, let the driver run. Reviewing every intermediate step is how you turn a two-hour ECO into a two-day one without catching more bugs.</p>
 <h2>Why it holds up</h2>
 <p>This is just the same idea the back-end flow already runs on: a single source of truth for the mutation, cheap parallel observation around it, and expensive checks batched at a few well-chosen checkpoints instead of smeared across everything.</p>
     </div>
     <hr class="p-end">
-    <p class="back"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+    <p class="back" lang="zh-CN"><a href="../#notes">&larr; 返回笔记列表</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
   </article>
 </main>
 
 <footer class="site">
   <div class="wrap">
-    <span>&copy; 2026 Nolan Pierce &middot; built in public</span>
+    <span>&copy; 2026 Nolan Pierce &middot; <span lang="zh-CN">边做边公开</span><span lang="en">built in public</span></span>
     <span class="sep"></span>
     <a href="https://github.com/nolanpix">GitHub</a>
     <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>

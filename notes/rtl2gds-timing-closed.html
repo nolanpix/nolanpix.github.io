@@ -1,18 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" data-lang="zh" data-title-en="RTL2GDS: synthesis is the easy half - Nolan Pierce">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RTL2GDS: synthesis is the easy half - Nolan Pierce</title>
-<meta name="description" content="Getting a clean, timing-closed GDSII out the far side is where most flows fall apart.">
-<meta property="og:title" content="RTL2GDS: synthesis is the easy half">
-<meta property="og:description" content="Getting a clean, timing-closed GDSII out the far side is where most flows fall apart.">
+<title>RTL2GDS：综合只是容易的那一半 - Nolan Pierce</title>
+<meta name="description" content="真正让大多数流程栽跟头的，是最后拿出一份干净、时序收敛的 GDSII。">
+<meta property="og:title" content="RTL2GDS：综合只是容易的那一半">
+<meta property="og:description" content="真正让大多数流程栽跟头的，是最后拿出一份干净、时序收敛的 GDSII。">
 <meta property="og:type" content="article">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/prefs.js"></script>
 </head>
 <body>
 
@@ -20,24 +21,48 @@
   <div class="wrap">
     <a class="brand" href="../"><span class="np">np.</span></a>
     <nav class="navlinks">
-      <a href="../#notes">notes</a>
-      <a href="../#repos">repos</a>
-      <a href="../#tools">tools</a>
-      <a href="../#about">about</a>
+      <a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">notes</span></a>
+      <a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">repos</span></a>
+      <a href="../#tools"><span lang="zh-CN">工具</span><span lang="en">tools</span></a>
+      <a href="../#about"><span lang="zh-CN">关于</span><span lang="en">about</span></a>
     </nav>
     <div class="right">
       <a href="https://github.com/nolanpix" rel="me">GitHub</a>
       <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+      <button class="pref" type="button" data-pref="lang"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+      <button class="pref" type="button" data-pref="theme"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
   <article class="post">
-    <a class="back" href="../#notes">&larr; all notes</a>
-    <p class="p-meta mono">November 20, 2026 &nbsp;&middot;&nbsp; RTL2GDS &middot; signoff &middot; timing</p>
-    <h1>RTL2GDS: synthesis is the easy half</h1>
-    <div class="p-body">
+    <a class="back" href="../#notes"><span lang="zh-CN">&larr; 全部笔记</span><span lang="en">&larr; all notes</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月20日 &nbsp;&middot;&nbsp; RTL2GDS &middot; 签核 &middot; 时序</span><span lang="en">November 20, 2026 &nbsp;&middot;&nbsp; RTL2GDS &middot; signoff &middot; timing</span></p>
+    <h1><span lang="zh-CN">RTL2GDS：综合只是容易的那一半</span><span lang="en">RTL2GDS: synthesis is the easy half</span></h1>
+    <div class="p-body" lang="zh-CN">
+<p>我关注 RTL2GDS 排行榜，就像有些人追体育比分。头条数字永远是“综合通过了”——而那只是容易的一半。把 RTL 综合成门级网表，已经是一个基本解决了的问题。真正让大多数流程栽跟头的，是在另一端拿出一份干净的、<code>timing-closed GDSII</code>（时序收敛的 GDSII）。</p>
+<h2>流程会在哪里出问题</h2>
+<p>从“综合通过”到“签核通过”之间，散落着各种具体的失败：</p>
+<ul>
+<li>建立时间和保持时间单独看都能过，做完 CTS 之后却互相打架。</li>
+<li>布线拥塞要等时钟树真正建起来之后才暴露。</li>
+<li>网表里毫无征兆的 DRC 和天线效应违例。</li>
+<li>在典型工艺角收敛、到慢速工艺角就崩掉的时序。</li>
+</ul>
+<p>这些问题都发生在物理域，而不是逻辑域，从 RTL 里根本看不到。正因为有它们，后端才是一份工作，而不是一个按钮。</p>
+<h2>“时序收敛”到底要求什么</h2>
+<p>时序收敛不是一项检查，而是整条链路同时成立：</p>
+<ul>
+<li>所有工艺角和工作模式下 <code>WNS</code> 与 <code>TNS</code> 都干净，而不只是最容易的那一个。</li>
+<li>没有那种悄悄在别处重新打开建立时间违例的保持时间修复。</li>
+<li>时钟树的偏斜和插入延迟，时序分析工具真的认可。</li>
+<li>用签核级的寄生参数，而不是估算值——数字会变，有时变化很大。</li>
+</ul>
+<h2>这个习惯</h2>
+<p>所以，当一个新流程拿出一份时序收敛的干净 GDSII 时，它的价值远超更快的综合速度。综合只是把你带到起跑线。所有有意思的事——以及所有难的事——都发生在布局和签核之间。</p>
+    </div>
+    <div class="p-body" lang="en">
 <p>I keep an eye on the RTL2GDS leaderboards the way some people check sports scores. The headline number is always &quot;it synthesized&quot; - and that is the easy half. Synthesizing RTL into a gate-level netlist is a solved-enough problem. Getting a clean, <code>timing-closed GDSII</code> out the far side is where most flows actually fall apart.</p>
 <h2>Where flows break</h2>
 <p>The gap between &quot;synthesized&quot; and &quot;signed off&quot; is a graveyard of specific failures:</p>
@@ -60,13 +85,14 @@
 <p>So when a new flow lands a clean GDSII with timing closed, it is worth more than a faster synthesis time. Synthesis gets you to the start line. Everything interesting - and everything hard - happens between placement and signoff.</p>
     </div>
     <hr class="p-end">
-    <p class="back"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+    <p class="back" lang="zh-CN"><a href="../#notes">&larr; 返回笔记列表</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
   </article>
 </main>
 
 <footer class="site">
   <div class="wrap">
-    <span>&copy; 2026 Nolan Pierce &middot; built in public</span>
+    <span>&copy; 2026 Nolan Pierce &middot; <span lang="zh-CN">边做边公开</span><span lang="en">built in public</span></span>
     <span class="sep"></span>
     <a href="https://github.com/nolanpix">GitHub</a>
     <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>

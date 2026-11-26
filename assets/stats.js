@@ -59,12 +59,13 @@
     bar.hidden = true;
     bar.setAttribute("role", "status");
     bar.setAttribute("aria-live", "polite");
-    bar.setAttribute("title", "views on this page / unique visitors today");
+    bar.setAttribute("title", "本页浏览量 / 今日独立访客 · views on this page / unique visitors today");
+    // Both languages are written once; the stylesheet shows the active one (assets/prefs.js).
     bar.innerHTML =
       '<span class="sb-dot" aria-hidden="true"></span>' +
-      '<span class="sb-item"><b class="sb-views">-</b>&nbsp;views</span>' +
+      '<span class="sb-item"><span lang="zh-CN">浏览&nbsp;</span><b class="sb-views">-</b><span lang="en">&nbsp;views</span></span>' +
       '<span class="sb-sep" aria-hidden="true">/</span>' +
-      '<span class="sb-item"><b class="sb-dau">-</b>&nbsp;today</span>';
+      '<span class="sb-item"><span lang="zh-CN">今日&nbsp;</span><b class="sb-dau">-</b><span lang="en">&nbsp;today</span></span>';
     return bar;
   }
 

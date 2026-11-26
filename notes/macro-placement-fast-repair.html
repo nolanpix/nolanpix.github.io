@@ -1,18 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" data-lang="zh" data-title-en="Macro placement: fast local repair beats raw wirelength - Nolan Pierce">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Macro placement: fast local repair beats raw wirelength - Nolan Pierce</title>
-<meta name="description" content="What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality.">
-<meta property="og:title" content="Macro placement: fast local repair beats raw wirelength">
-<meta property="og:description" content="What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality.">
+<title>宏单元摆放：快速局部修复比一味压线长更有效 - Nolan Pierce</title>
+<meta name="description" content="一次获胜的宏单元摆放方案让我学到的：多起点搜索、按拥塞排序，以及永远不能跳过合法性检查。">
+<meta property="og:title" content="宏单元摆放：快速局部修复比一味压线长更有效">
+<meta property="og:description" content="一次获胜的宏单元摆放方案让我学到的：多起点搜索、按拥塞排序，以及永远不能跳过合法性检查。">
 <meta property="og:type" content="article">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/prefs.js"></script>
 </head>
 <body>
 
@@ -20,24 +21,42 @@
   <div class="wrap">
     <a class="brand" href="../"><span class="np">np.</span></a>
     <nav class="navlinks">
-      <a href="../#notes">notes</a>
-      <a href="../#repos">repos</a>
-      <a href="../#tools">tools</a>
-      <a href="../#about">about</a>
+      <a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">notes</span></a>
+      <a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">repos</span></a>
+      <a href="../#tools"><span lang="zh-CN">工具</span><span lang="en">tools</span></a>
+      <a href="../#about"><span lang="zh-CN">关于</span><span lang="en">about</span></a>
     </nav>
     <div class="right">
       <a href="https://github.com/nolanpix" rel="me">GitHub</a>
       <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+      <button class="pref" type="button" data-pref="lang"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+      <button class="pref" type="button" data-pref="theme"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
   <article class="post">
-    <a class="back" href="../#notes">&larr; all notes</a>
-    <p class="p-meta mono">November 24, 2026 &nbsp;&middot;&nbsp; placement &middot; congestion &middot; legality</p>
-    <h1>Macro placement: fast local repair beats raw wirelength</h1>
-    <div class="p-body">
+    <a class="back" href="../#notes"><span lang="zh-CN">&larr; 全部笔记</span><span lang="en">&larr; all notes</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月24日 &nbsp;&middot;&nbsp; 布局 &middot; 拥塞 &middot; 合法性</span><span lang="en">November 24, 2026 &nbsp;&middot;&nbsp; placement &middot; congestion &middot; legality</span></p>
+    <h1><span lang="zh-CN">宏单元摆放：快速局部修复比一味压线长更有效</span><span lang="en">Macro placement: fast local repair beats raw wirelength</span></h1>
+    <div class="p-body" lang="zh-CN">
+<p>我花了一个晚上通读一份宏单元摆放（macro placement）比赛的获胜方案，最大的收获不是什么巧妙的代价函数，而是纪律。</p>
+<h2>把算力花在搜索上，而不是线长上</h2>
+<p>做宏单元摆放时，人的本能是追求总线长：把宏单元挤紧、把线网缩短，然后收工。获胜的方案做的事没那么光鲜，却更有效：它跑的是 <code>multi-start</code> 多起点搜索，同时保留大量候选布局，并用考虑拥塞的评分来排序，而不是只看线长。</p>
+<blockquote>纸面上线长很短、一布线就像陷进泥潭的摆放，不是好摆放。拥塞才是真正的硬通货。</blockquote>
+<h2>快速局部修复才是引擎</h2>
+<p>另一半是一个便宜、快速、反复执行的 <code>local repair</code>（局部修复）步骤。与其指望一次就生成完美的全局布局，不如先拿一个还不错的方案，再一点点调整：把宏单元推出热点区域、打通一条通道、重新检查。因为每次修复都很便宜，整个多起点候选池里做上千次也负担得起。</p>
+<ul>
+<li>多生成几个起点，不要只信一个随机种子。</li>
+<li>按拥塞和可布线性排序，而不是只看线长。</li>
+<li>局部修复要勤，迭代循环要短。</li>
+</ul>
+<h2>合法性检查不能省</h2>
+<p>最容易跳过、跳过代价又最大的一环，是对每个候选都做 <code>strict legality checks</code>（严格合法性检查）。重叠、没对齐网格的宏单元、被挡住的行——只要有一个不合法的摆放混进排名，你就会朝着一个幻想去优化，还要白白花上几个小时才发现。先查合法性，尽早淘汰，只给真正能流片的方案打分。</p>
+<p>这些都谈不上新奇。后端一再教给我们的还是同一个道理：巧妙的代价函数，远不如快速的迭代循环、诚实的评分，以及一道永远不关的合法性关卡重要。</p>
+    </div>
+    <div class="p-body" lang="en">
 <p>I spent an evening reading through a winning run of a macro-placement challenge, and the takeaway was not a clever cost function. It was discipline.</p>
 <h2>Spend search, not wirelength</h2>
 <p>The instinct on macro placement is to chase total wirelength: pack the macros, shrink the nets, call it done. The run that won did something less glamorous and more effective: it ran a <code>multi-start</code> search, kept many candidate floorplans alive, and ranked them with a congestion-aware score rather than pure wirelength.</p>
@@ -54,13 +73,14 @@
 <p>None of this is exotic. It is the same lesson the back end keeps teaching: the clever cost function matters less than a fast loop, an honest score, and a hard legality gate you never turn off.</p>
     </div>
     <hr class="p-end">
-    <p class="back"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+    <p class="back" lang="zh-CN"><a href="../#notes">&larr; 返回笔记列表</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
   </article>
 </main>
 
 <footer class="site">
   <div class="wrap">
-    <span>&copy; 2026 Nolan Pierce &middot; built in public</span>
+    <span>&copy; 2026 Nolan Pierce &middot; <span lang="zh-CN">边做边公开</span><span lang="en">built in public</span></span>
     <span class="sep"></span>
     <a href="https://github.com/nolanpix">GitHub</a>
     <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>
