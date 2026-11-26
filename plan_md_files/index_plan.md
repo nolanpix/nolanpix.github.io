@@ -307,3 +307,16 @@ the nav, and the "what is this / how to use it" explainer in one object.
 - Q&A / 待定：
   - 用户说“以后可能分其他类别”，当前只建了有内容的两个主题；不预先造空分类，避免首页出现 0 篇的分组。新增主题时同步在 `CATEGORIES` 加一行并在文章上写 `category`。
   - 折叠状态不做 localStorage 记忆：换页即回到“当前主题展开”，避免导航行为依赖 JS；如以后需要，可在 `prefs.js` 里加。
+
+## 12. 改进策略（首页 hero 定位改为“不只后端”；DIE 参数改 3280x6692 / 62%，2026-11-26）
+
+- 需求（用户原话归纳）：站点记录的不只是后端笔记，还会有其他领域的文章和自己做的小工具，因此首页最上方那段文字不能只说“后端笔记”；同时把 hero 上方的 DIE 小字改成尺寸 `3280 x 6692`、利用率 `62%`。
+- 文案方案：
+  - 中文标题改为“芯片、数学与小工具：我的公开笔记本。”，英文 “Silicon, math, and small tools: my open notebook.”；gradient 落在“公开笔记本 / open notebook”上，保留 `np.` 品牌色。
+  - 中文 lede 明确“芯片后端只是其中一条主线”，并列出数学、AI、其他领域长文、代码仓库、小工具；英文 lede 同步。
+  - `<title>`、`data-title-en`、meta description、og:title、og:description 一起改，避免搜索结果和分享卡仍写“后端笔记”。
+  - 布局图 BLOCK C（工具）原文只提 Tcl/Python 流程与日志，和实际已有 MBTI 自测不符，顺手放宽为“Tcl/Python 流程、日志处理，也有和芯片无关的小玩意”。
+- DIE 小字：`860 x 420 um / util 68%` → `3280 x 6692 um / util 62%`。用户只给了数字，单位沿用原 `um`。
+- 验证（headless Chromium `chromium-1248/chrome-linux-arm64`，file:// 本地页）：
+  - 1440/390 两档：无横向溢出（scrollWidth == clientWidth），hero/标题/lede 文案与中英切换后的 `document.title` 全部命中，无 page error。
+  - 320 宽时 eyebrow 折成两行（44px），仍无溢出，属可接受的极端窄屏表现。

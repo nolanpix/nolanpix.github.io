@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="zh-CN" data-lang="zh" data-title-en="Nolan Pierce - Backend notes from floorplan to signoff">
+<html lang="zh-CN" data-lang="zh" data-title-en="Nolan Pierce - Silicon, math, and small tools">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nolan Pierce - 后端笔记，从 floorplan 到 signoff</title>
-<meta name="description" content="Nolan Pierce，洛杉矶的数字 IC 物理设计工程师。笔记按主题分组：数字后端（布局布线、时钟树、时序签核），以及数学、AI 等与芯片无关的写作，还有公开做的小工具。">
-<meta property="og:title" content="Nolan Pierce - 后端笔记，从 floorplan 到 signoff">
-<meta property="og:description" content="数字后端的实战笔记，以及数学、AI 等与芯片无关的写作；按主题分组，边做边公开。">
+<title>Nolan Pierce - 芯片、数学与小工具</title>
+<meta name="description" content="Nolan Pierce，洛杉矶的数字 IC 物理设计工程师。公开笔记本按主题分组：数字后端、数学与科学等领域的长文，以及我发布的代码和顺手做的小工具。">
+<meta property="og:title" content="Nolan Pierce - 芯片、数学与小工具">
+<meta property="og:description" content="数字后端的实战笔记，数学、AI 及其他领域的写作，还有公开的代码仓库和小工具；按主题分组，边做边公开。">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,17 +59,17 @@
 <main class="wrap">
 
   <section class="hero">
-    <p class="eyebrow mono">DIE: <b>nolanpix</b> &nbsp; 860 x 420 um &nbsp; util 68%</p>
-    <h1 class="title"><span lang="zh-CN">后端笔记，从 <span class="grad">floorplan</span> 到 signoff。</span><span lang="en">Backend notes, from <span class="grad">floorplan</span> to signoff.</span></h1>
+    <p class="eyebrow mono">DIE: <b>nolanpix</b> &nbsp; 3280 x 6692 um &nbsp; util 62%</p>
+    <h1 class="title"><span lang="zh-CN">芯片、数学与小工具：我的<span class="grad">公开笔记本</span>。</span><span lang="en">Silicon, math, and small tools: my <span class="grad">open notebook</span>.</span></h1>
     <p class="lede" lang="zh-CN">
-      我是 Nolan Pierce，在洛杉矶做数字 IC 物理设计（P&amp;R、CTS、STA、签核）。这里是我的公开笔记本：笔记按主题分组，除了后端流程，也会写数学、AI 这些和芯片无关的东西；另有我发布的代码仓库和顺手做的小工具。所有内容都会先发在这里。第一次来？下面这张布局图就是导航。
+      我是 Nolan Pierce，在洛杉矶做数字 IC 物理设计（P&amp;R、CTS、STA、签核）。这里是我的公开笔记本，芯片后端只是其中一条主线：笔记按主题分组，也会收数学、AI 和其他领域的长文；此外还有我发布的代码仓库和顺手做的小工具。所有内容都会先发在这里。第一次来？下面这张布局图就是导航。
     </p>
     <p class="lede" lang="en">
       I'm Nolan Pierce, a digital IC physical design engineer in Los Angeles
-      (P&amp;R, CTS, STA, signoff). This is my open notebook. Notes are grouped by topic:
-      the back-end flow, plus math and AI writing that has nothing to do with chips.
-      There are also the repos I publish and small tools I build. Everything lands here
-      first. New here? The floorplan below is the map.
+      (P&amp;R, CTS, STA, signoff). This is my open notebook. Back-end work is one
+      thread; notes are grouped by topic and also cover math, AI, and writing from
+      other fields. Beyond that are the repos I publish and the small tools I build.
+      Everything lands here first. New here? The floorplan below is the map.
     </p>
 
     <div class="floor" aria-label="站点地图，画成一张芯片布局图" data-aria-en="Site map, drawn as a chip floorplan">
@@ -95,8 +95,8 @@
           <span class="pin"></span>
           <span class="tag mono">BLOCK C</span>
           <h3><span lang="zh-CN">工具</span><span lang="en">Tools</span></h3>
-          <p lang="zh-CN">给 Tcl/Python 流程和日志处理用的小工具，一个只做一件事。</p>
-          <p lang="en">Tiny single-purpose utilities for Tcl/Python flows and log wrangling.</p>
+          <p lang="zh-CN">顺手做的小工具：Tcl/Python 流程、日志处理，也有和芯片无关的小玩意。</p>
+          <p lang="en">Small tools I build &mdash; Tcl/Python flow helpers, log wrangling, and the occasional off-topic experiment.</p>
         </a>
         <a class="block" href="#about">
           <span class="pin"></span>
