@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Checks for gen_notes.py: the short-name table and its guards. Run: python3 tools/tests/test_gen_notes.py"""
+"""Checks for gen_notes.py: the short-name table, the contents rail (note pages, index refresh, 404 page)
+and their guards. Run: python3 tools/tests/test_gen_notes.py"""
 import copy
 import json
 import os
+import re
 import sys
 import tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
 import gen_notes  # noqa: E402
 
+INDEX = os.path.join(HERE, "..", "..", "index.html")
 fails = []
 
 
@@ -17,19 +21,75 @@ def check(condition, message):
         fails.append(message)
 
 
+def read(path):
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
+def run(tmp, index_text=None):
+    """Run main() with every output inside tmp; index.html starts as a copy of the real one (or index_text)."""
+    index = os.path.join(tmp, "index.html")
+    with open(index, "w", encoding="utf-8") as handle:
+        handle.write(read(INDEX) if index_text is None else index_text)
+    return gen_notes.main(["-o", os.path.join(tmp, "notes"), "-p", os.path.join(tmp, "pages.json"),
+                           "-i", index, "-e", os.path.join(tmp, "404.html")])
+
+
+def outside_rail(text):
+    return re.sub(re.escape(gen_notes.RAIL_START) + ".*?" + re.escape(gen_notes.RAIL_END), "", text, flags=re.S)
+
+
 with tempfile.TemporaryDirectory() as tmp:
+    code = run(tmp)
     pages = os.path.join(tmp, "pages.json")
-    code = gen_notes.main(["-o", os.path.join(tmp, "notes"), "-p", pages])
     table = json.load(open(pages, encoding="utf-8")) if os.path.exists(pages) else {}
     check(code == 0, "a normal run must exit 0")
-    check(sorted(table) == sorted("/notes/{}.html".format(p["slug"]) for p in gen_notes.POSTS),
-          "pages.json must have exactly one entry per note")
+    check(sorted(table) == sorted(["/notes/{}.html".format(p["slug"]) for p in gen_notes.POSTS] +
+                                  ["/" + t["href"] for t in gen_notes.TOOLS]),
+          "pages.json must have exactly one entry per note and per tool")
+    check(table.get("/mbti/") == ["MBTI 自测", "MBTI test"], "the MBTI tool keeps MBTI in its short name")
     check(all(len(pair) == 2 and all(pair) for pair in table.values()), "every entry is [zh, en], both non-empty")
     check(all(gen_notes.display_width(name) <= gen_notes.SHORT_MAX for pair in table.values() for name in pair),
           "every short name fits the report column")
     check(len(os.listdir(os.path.join(tmp, "notes"))) == len(gen_notes.POSTS), "one page per note")
 
+    for post in gen_notes.POSTS:
+        page = read(os.path.join(tmp, "notes", post["slug"] + ".html"))
+        check(page.count('<nav class="rail"') == 1, post["slug"] + ": exactly one rail")
+        current = re.findall(r'<a href="([^"]+)" aria-current="page">', page)
+        check(current == [post["slug"] + ".html"], post["slug"] + ": only its own link is current, got {}".format(current))
+        check('href="../#notes"' in page and 'href="../mbti/"' in page, post["slug"] + ": rail links climb to the root")
+
+    index = read(os.path.join(tmp, "index.html"))
+    check(index.count('<nav class="rail"') == 1 and 'href="mbti/"' in index and 'href="notes/structuring-eco-work.html"' in index,
+          "index: the rail sits between the markers with home-relative links")
+    check(outside_rail(index) == outside_rail(read(INDEX)), "index: nothing outside the markers changes")
+    check(run(tmp, index) == 0 and read(os.path.join(tmp, "index.html")) == index, "index: a second run changes nothing")
+
+    error = read(os.path.join(tmp, "404.html"))
+    check('href="../' not in error and 'href="notes/' not in error and 'href="mbti/' not in error,
+          "404: no page-relative links (it is served at any missing path)")
+    check('href="/assets/style.css"' in error and 'href="/notes/rtl2gds-timing-closed.html"' in error and 'href="/"' in error,
+          "404: root-relative stylesheet, rail and home link")
+    check('content="noindex"' in error and "stats.js" not in error and "aria-current" not in error,
+          "404: noindex, no visit counting, no current page")
+
 check(gen_notes.display_width("ECO 三道关卡") == 12, "CJK characters count as two columns")
+
+many = []
+for i in range(7):
+    post = copy.deepcopy(gen_notes.POSTS[0])
+    post.update(slug="n{}".format(i), date="2026-11-0{}".format(i + 1))
+    many.append(post)
+rail = gen_notes.rail_html(many, "../", "")
+check(re.findall(r'href="(n\d)\.html"', rail) == ["n6", "n5", "n4", "n3", "n2"], "rail lists the newest five notes first")
+check("全部 7 篇" in rail and "All 7 notes" in rail and 'href="../#notes"' in rail, "older notes sit behind an 'all N notes' link")
+
+with tempfile.TemporaryDirectory() as tmp:
+    code = run(tmp, read(INDEX).replace(gen_notes.RAIL_END, ""))
+    check(code == 1, "index without the end marker must exit 1, got {}".format(code))
+    check(not os.listdir(os.path.join(tmp, "notes")) and not os.path.exists(os.path.join(tmp, "pages.json"))
+          and not os.path.exists(os.path.join(tmp, "404.html")), "index without markers: nothing may be written")
 
 original = gen_notes.POSTS
 for label, mutate, expect in [
@@ -45,12 +105,12 @@ for label, mutate, expect in [
     with tempfile.TemporaryDirectory() as tmp:
         gen_notes.POSTS = posts
         try:
-            code = gen_notes.main(["-o", os.path.join(tmp, "notes"), "-p", os.path.join(tmp, "pages.json")])
+            code = run(tmp)
         finally:
             gen_notes.POSTS = original
         check(code == 2, "{}: must exit 2, got {}".format(label, code))
-        check(not os.path.exists(os.path.join(tmp, "pages.json")) and not os.listdir(os.path.join(tmp, "notes")),
-              "{}: nothing may be written".format(label))
+        check(not os.path.exists(os.path.join(tmp, "pages.json")) and not os.listdir(os.path.join(tmp, "notes"))
+              and read(os.path.join(tmp, "index.html")) == read(INDEX), "{}: nothing may be written".format(label))
 
 print("FAILED:\n  " + "\n  ".join(fails) if fails else "OK")
 raise SystemExit(1 if fails else 0)

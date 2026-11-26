@@ -191,7 +191,7 @@ h1.title .grad {
 }
 
 /* ---- sections ---- */
-section.band { padding: 46px 0 8px; }
+section.band { padding: 46px 0 8px; scroll-margin-top: 58px; } /* anchor jumps land below the sticky top bar */
 .band-head {
   display: flex; align-items: baseline; gap: 12px; margin: 0 0 18px;
 }
@@ -360,3 +360,24 @@ article.post { padding: 40px 0 10px; }
   .topbar .right a.adm-entry { padding: 0 8px; }
   .adm-entry .lbl { display: none; }
 }
+
+/* ---- contents rail (written by tools/gen_notes.py): the whole site, readable at a glance, in the
+   left margin of wide screens. Kept quiet on purpose: no box, no icons, small muted type; only the
+   page being read is marked. It replaces the top-bar section links where it shows. ---- */
+.rail { display: none; }
+@media (min-width: 1280px) {
+  .navlinks { display: none; }
+  .rail {
+    display: block; position: fixed; z-index: 5;
+    top: 100px; left: max(16px, calc(50% - var(--maxw) / 2 - 188px)); width: 152px;
+    max-height: calc(100vh - 170px); overflow-y: auto;
+    font-size: 0.8rem; line-height: 1.5;
+  }
+}
+.rail ul { list-style: none; margin: 0; padding: 0; }
+.rail > ul > li + li { margin-top: 8px; }
+.rail a { display: block; padding: 2px 0; color: var(--muted); }
+.rail a:hover { color: var(--fg); }
+.rail li li a { padding-left: 12px; border-left: 1px solid var(--line); }
+.rail a[aria-current="page"] { color: var(--fg); border-left-color: var(--accent); }
+@media print { .rail { display: none; } }
