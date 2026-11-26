@@ -378,7 +378,7 @@ function adminPage(stage, message = '') {
   const icons = '<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>';
   const prefs = `<button class="pref" type="button" data-pref="lang">${both('EN','中文')}</button><button class="pref" type="button" data-pref="theme">${icons}</button>`;
   const title = report ? ['访问报表','Traffic report'] : ['站长入口','Owner access'];
-  return `<!doctype html><html lang="zh-CN" data-lang="zh" data-title-en="${title[1]} · Nolan Pierce"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${title[0]} · Nolan Pierce</title><link rel="stylesheet" href="${SITE}/assets/style.css"><link rel="stylesheet" href="${SITE}/assets/admin.css"><script src="/admin/prefs.js?v=2"></script>${report?'<script src="/admin/ui.js" defer></script>':''}</head><body class="adm-body"><a class="adm-skip" href="#main">${both('跳到正文','Skip to content')}</a><header class="adm-top"><div><a class="brand" href="${SITE}/"><span class="np">np.</span> <span>${both('现场笔记','field notes')}</span></a><span class="adm-part">/ &nbsp;${both('后台','admin')}</span><span class="adm-spacer"></span>${report?`<form action="/admin/logout" method="post"><button class="adm-plain" type="submit">${both('退出登录','Sign out')}</button></form>`:`<a class="adm-back" href="${SITE}/">${both('返回博客','Back to blog')}</a>`}${prefs}</div></header><main id="main" class="adm-main">${report?panel:gate}</main><footer class="adm-foot">Nolan Pierce &nbsp; / &nbsp; ${both('私人统计 · 仅管理员可见','Private analytics · admins only')}</footer></body></html>`;
+  return `<!doctype html><html lang="zh-CN" data-lang="zh" data-title-en="${title[1]} · Nolan Pierce"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${title[0]} · Nolan Pierce</title><link rel="stylesheet" href="${SITE}/assets/style.css"><link rel="stylesheet" href="${SITE}/assets/admin.css"><script src="/admin/prefs.js?v=3"></script>${report?'<script src="/admin/ui.js" defer></script>':''}</head><body class="adm-body"><a class="adm-skip" href="#main">${both('跳到正文','Skip to content')}</a><header class="adm-top"><div><a class="brand" data-site-link href="${SITE}/"><span class="np">np.</span> <span>${both('现场笔记','field notes')}</span></a><span class="adm-part">/ &nbsp;${both('后台','admin')}</span><span class="adm-spacer"></span>${report?`<form action="/admin/logout" method="post"><button class="adm-plain" type="submit">${both('退出登录','Sign out')}</button></form>`:`<a class="adm-back" data-site-link href="${SITE}/">${both('返回博客','Back to blog')}</a>`}${prefs}</div></header><main id="main" class="adm-main">${report?panel:gate}</main><footer class="adm-foot">Nolan Pierce &nbsp; / &nbsp; ${both('私人统计 · 仅管理员可见','Private analytics · admins only')}</footer></body></html>`;
 }
 
 // Theme / language for the admin pages only. Its own keys (npa:*): this origin does not
@@ -392,6 +392,14 @@ function adminPrefs() {
   const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
   const savedTheme = () => { const t = load('npa:theme'); return t === 'light' || t === 'dark' ? t : null; };
   const setTheme = t => root.setAttribute('data-theme', t);
+  // Back to the blog (and the brand) must carry the dashboard's tone too, so leaving a
+  // dark dashboard never lands on a site still showing its older saved choice.
+  function syncSiteLinks() {
+    const theme = root.dataset.theme;
+    document.querySelectorAll('a[data-site-link]').forEach(a => {
+      try { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('theme', theme); a.setAttribute('href', u.href); } catch {}
+    });
+  }
   // A link from the public site carries ?theme=light|dark: this origin cannot read np:theme.
   // Apply it, remember it for the following sign-in steps, then drop it from the address bar.
   let fromSite = null;
@@ -408,6 +416,7 @@ function adminPrefs() {
     document.querySelectorAll('[data-pref="lang"]').forEach(b => { b.setAttribute('aria-label', w.lang); b.title = w.lang; });
     document.querySelectorAll('[data-pref="theme"]').forEach(b => { const t = w[root.dataset.theme]; b.setAttribute('aria-label', t); b.title = t; });
     document.querySelectorAll('[data-aria-en]').forEach(el => { if (!el.hasAttribute('data-aria-zh')) el.setAttribute('data-aria-zh', el.getAttribute('aria-label') || ''); el.setAttribute('aria-label', el.getAttribute(lang === 'en' ? 'data-aria-en' : 'data-aria-zh')); });
+    syncSiteLinks();
     document.dispatchEvent(new CustomEvent('npa:lang'));
   }
   function wire() {

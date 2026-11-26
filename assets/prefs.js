@@ -9,6 +9,7 @@
  * Buttons: <button data-pref="lang"> and <button data-pref="theme">.
  * Elements with data-aria-en get their aria-label swapped with the language.
  * Admin links (another origin) carry the current theme as ?theme=light|dark.
+ * Links back from the admin carry ?theme=light|dark, which this script adopts.
  */
 (function () {
   "use strict";
@@ -35,6 +36,20 @@
     var t = load("np:theme");
     return t === "light" || t === "dark" ? t : null;
   }
+  // The admin hands its tone back as ?theme=light|dark on "Back to blog".
+  // Adopt it, remember it, then drop it so a later switch is not undone by a stale URL.
+  function incomingTheme() {
+    var t = null;
+    try { t = new URLSearchParams(location.search).get("theme"); } catch (e) { return null; }
+    if (t !== "light" && t !== "dark") return null;
+    save("np:theme", t);
+    try {
+      var u = new URL(location.href);
+      u.searchParams.delete("theme");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) { /* file:// or old browser: the saved choice still applies */ }
+    return t;
+  }
   function applyTheme(theme) {
     root.setAttribute("data-theme", theme);
     syncAdminLinks();
@@ -59,7 +74,7 @@
     });
   }
 
-  applyTheme(savedTheme() || (system && system.matches ? "light" : "dark"));
+  applyTheme(incomingTheme() || savedTheme() || (system && system.matches ? "light" : "dark"));
   applyLang(load("np:lang") === "en" ? "en" : "zh");
 
   function refresh() {

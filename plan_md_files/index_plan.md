@@ -347,3 +347,23 @@ the nav, and the "what is this / how to use it" explainer in one object.
     - 直接访问 `/admin?theme=light`（系统深色）首屏即浅色；刷新后保持；`?theme=blue` 被忽略；`?theme=light` 覆盖已存的 dark。
   - 回归：`/tmp/test_wksel/node/i18n.mjs` 11 组通过。
 - 上线：主站（`assets/prefs.js`）随 GitHub Pages 发布；后台需站长在 Cloudflare 控制台用本版 `worker/counter.js` 整体替换并部署，之后 `?theme=` 才会生效。部署前旧 Worker 只是忽略该参数。
+
+## 15. 改进策略（所有页面间保持同一色调：后台回主站也带主题，2026-11-27）
+
+- 需求（用户原话）：不止主页去后台；不管从哪个页面改色调，跳到其他页面都要维持；现在从后台切回主页会丢后台的色调；统一检查所有切换。
+- 检查结果（改前）：
+  - 主站内部（首页 / 文章 / 404）共用 `np:theme`，`prefs.js` 在 head 同步执行 → 正常。
+  - 主站 → MBTI：同源，MBTI 读 `np:theme` → 正常；MBTI → 主站：MBTI 写回 `np:theme` → 正常。
+  - 主站 → 后台：入口链接带 `?theme=` → 正常（§14）。
+  - 后台内部（登录 / 密码 / 报表 / 退出）：`npa:theme` → 正常。
+  - 后台 → 主站（“返回博客”与 `np.` 品牌链接）：链接是站点根地址，主站读自己的旧 `np:theme` → 跳变（本次修复）。
+- 修复：
+  - 后台模板给返回链接加 `data-site-link`；`adminPrefs` 的 `refresh()` 调用 `syncSiteLinks()`，把当前 `data-theme` 实时写进这些链接（切换主题后立刻更新，中键、复制链接同样有效）。
+  - 主站 `prefs.js` 新增 `incomingTheme()`：读取 `?theme=light|dark`，校验后应用并写入 `np:theme`，再从地址栏移除参数（防止刷新/回退时旧参数覆盖之后的切换）；首屏在 `<body>` 之前生效。
+  - 账号内缓存戳改为 `prefs.js?v=3`。
+- 无法覆盖的边界：用浏览器自带的“后退”从后台回到主站时，主站页面来自历史恢复，两个源无法互写 localStorage，只能显示离开时的站点色调；请用页面内的“返回博客 / np.”链接，它们已带主题。
+- 验证（均通过）：
+  - `/tmp/test_wksel/node/admin_e2e.mjs` 19 组：新增往返组（主站浅色 → 后台 → 后台切深色 → 返回博客 → 主站深色且 `np:theme` 已存）；站点以 `?theme=` 进入时在 `<body>` 前即生效、清参数、刷新不被旧参数覆盖；报表品牌链接带当前主题；退出登录回登录页保持深色且返回链接仍带参数。
+  - `/tmp/test_wksel/node/theme_transitions.mjs` 4 组：首页 → 文章 → 首页 → 404 → 长文、首页 → MBTI、MBTI 切深色 → 主站 → 文章 → 404 → MBTI、四类页面刷新；每一步 `data-theme` 在 `<body>` 前正确且不跳变，404 的后台入口随主题带参数。
+  - 回归：`i18n.mjs` 11 组、`mbti_site.mjs` 5 组、`test_gen_notes.py` OK。
+- 上线：主站随 Pages；Worker 仍需站长手动部署，部署后后台 → 主站的色调回传才生效。
