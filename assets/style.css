@@ -334,3 +334,15 @@ article.post { padding: 40px 0 10px; }
 :root:lang(zh) h1.title { line-height: 1.22; max-width: 12em; }
 :root:lang(zh) .post h1 { line-height: 1.32; }
 :root:lang(zh) em { font-style: normal; font-weight: 600; }
+
+/* ---- owner-only dashboard entry (top bar + footer) ---- */
+.topbar .right a.adm-entry {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px;
+  border: 1px dashed var(--line); border-radius: 7px; color: var(--muted); font-size: 0.8rem; white-space: nowrap;
+}
+.topbar .right a.adm-entry:hover { color: var(--fg); border-color: var(--faint); }
+.adm-entry svg { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) {
+  .topbar .right a.adm-entry { padding: 0 8px; }
+  .adm-entry .lbl { display: none; }
+}

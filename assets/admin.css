@@ -8,7 +8,7 @@
 .adm-top > div { display: flex; align-items: center; gap: 14px; min-height: 64px; }
 .adm-top a { text-decoration: none; color: var(--fg); }
 .adm-top .brand { display: inline-flex; align-items: baseline; gap: 9px; }
-.adm-part, .adm-top > div > a:last-child, .adm-top .adm-plain, .adm-foot, .adm-kicker, .adm-caption, .adm-panel small, #notice, .adm-controls, .adm-key { font: 0.79rem/1.55 var(--adm-mono); }
+.adm-part, .adm-top > div > a:last-child, .adm-top .adm-back, .adm-top .adm-plain, .adm-foot, .adm-kicker, .adm-caption, .adm-panel small, #notice, .adm-controls, .adm-key { font: 0.79rem/1.55 var(--adm-mono); }
 .adm-part, .adm-kicker, .adm-panel small, .adm-caption, #notice, .adm-key, .adm-foot { color: var(--muted); }
 .adm-spacer { flex: 1; }
 .adm-main { padding-block: clamp(28px, 5vw, 68px) 36px; }
@@ -51,3 +51,8 @@
 .adm-gate h1 { font-size: clamp(2.2rem,5vw,3.1rem); }.adm-gate p:not(.adm-kicker) { color: var(--muted); }.adm-gate label { display: block; font-weight: 600; }.adm-gate input { display: block; width: 100%; margin: 5px 0 12px; padding: 10px; border: 1px solid var(--line); border-radius: 5px; color: var(--fg); background: var(--bg); font: inherit; }.adm-gate .adm-button,.adm-gate button[type=submit]:not(.adm-plain) { display: inline-block; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 600; }.adm-gate form + form { margin-top: 12px; }.adm-gate .adm-alert { border-left: 2px solid var(--accent); padding-left: 10px; }
 @media(max-width:660px) { .adm-top > div,.adm-main,.adm-foot { width: calc(100% - 28px); }.adm-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }.adm-kpis > div { padding: 12px; }.adm-kpis > div:nth-child(3) { border-left: none; padding-left: 0; }.adm-kpis > div:nth-child(n+3) { border-top: 1px solid var(--line); }.adm-panel svg text { font-size: 13px; }.adm-panel { border-radius: 7px; }.adm-ranks { grid-template-columns: 1fr; } }
 @media(prefers-reduced-motion:reduce) { .adm-body *, .adm-body *::before { scroll-behavior:auto; animation:none; transition:none; } }
+/* Theme / language switches (worker adminPrefs): same look as the public site, tighter row. */
+.adm-body .pref { flex: none; min-width: 30px; height: 28px; padding: 0 8px; border-radius: 7px; background: transparent; color: var(--muted); font: 600 0.74rem/1 var(--adm-mono); }
+.adm-body .pref:hover { color: var(--fg); border-color: var(--faint); }
+.adm-top .adm-back { white-space: nowrap; }
+@media(max-width:520px) { .adm-top > div { gap: 9px; } .adm-top .brand > span:last-child, .adm-part { display: none; } }

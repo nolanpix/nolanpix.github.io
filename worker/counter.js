@@ -17,6 +17,30 @@ const hash = async s => hex(await digest(s));
 const stmt = (db, sql, ...values) => values.length ? db.prepare(sql).bind(...values) : db.prepare(sql);
 const one = (db, sql, ...values) => stmt(db, sql, ...values).first();
 
+// Admin-facing messages in Chinese; English lives in the [lang="en"] twin.
+const ZH = {
+  'Request too large.':'请求内容过大。',
+  'D1 binding DB is not configured.':'尚未配置 D1 数据库绑定 DB。',
+  'Keep the previous COUNTER KV binding for initial import.':'首次导入数据前，请保留原来的 COUNTER KV 绑定。',
+  'Invalid legacy counter; inspect KV before retrying.':'旧计数数据有误，请先检查 KV 再重试。',
+  'Counters are being imported; retry shortly.':'正在导入历史计数，请稍后重试。',
+  'Invalid report window or timezone offset.':'报表时间范围或时区参数无效。',
+  'Owner sign-in is not configured.':'站长登录尚未配置。',
+  'GitHub could not verify the sign-in. Start again.':'GitHub 无法验证这次登录，请重新开始。',
+  'Sign-in expired or cancelled. Start again.':'登录已过期或已取消，请重新开始。',
+  'GitHub did not authorize this sign-in. Start again.':'GitHub 未授权这次登录，请重新开始。',
+  'This report is only available to its owner. Choose the owner account on GitHub.':'报表只对站长开放。请在 GitHub 上选择站长账号。',
+  'Sign in with GitHub first.':'请先用 GitHub 登录。',
+  'Use the password form.':'请通过密码表单提交。',
+  'Too many attempts. Try again in 15 minutes.':'尝试次数过多，请 15 分钟后再试。',
+  'Password not accepted. Try again.':'密码不正确，请重试。',
+  'Sign in again.':'请重新登录。',
+  'Invalid form origin.':'表单来源无效。',
+  'Not found.':'找不到该页面。',
+  'Both GitHub sign-in and the owner password are required.':'需要先完成 GitHub 登录并输入站长密码。',
+  'Service temporarily unavailable.':'服务暂时不可用。'
+};
+const both = (zh, en) => `<span lang="zh-CN">${zh}</span><span lang="en">${en}</span>`;
 class Status extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
@@ -304,6 +328,10 @@ async function adminRoute(req,env,u) {
     return redirect('/admin',[cookie(COOKIE,'',0),cookie(FLOW,'',0)]);
   }
   if (req.method === 'POST' && p === '/admin/password') return submitPassword(req,env,s);
+  if (req.method === 'GET' && p === '/admin/prefs.js') {
+    const r = privateReply('('+adminPrefs.toString()+')();',200,'application/javascript; charset=utf-8');
+    r.headers.set('Cache-Control','public, max-age=3600'); r.headers.delete('Vary'); return r;
+  }
   if (req.method === 'GET' && (p === '/admin' || p === '/admin/')) return page(s?.stage==='full' ? 'report' : s?.stage || 'login');
   if (req.method === 'GET' && (p === '/admin/ui.js' || p === '/admin/api/report')) {
     if (s?.stage !== 'full') throw new Status(401,'Both GitHub sign-in and the owner password are required.');
@@ -332,16 +360,54 @@ export default {
 function adminPage(stage, message = '') {
   const report = stage === 'report', password = stage === 'password';
   const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const gate = `<section class="adm-gate"><p class="adm-kicker">OWNER ACCESS &nbsp; / &nbsp; ${password ? '02' : '01'} OF 02</p><h1>${password ? 'Unlock your report.' : 'Private workspace.'}</h1><p>${password ? 'GitHub identity verified. Enter your separate dashboard password.' : 'Sign in with the owner GitHub account, then confirm your dashboard password.'}</p>${message?`<p class="adm-alert" role="alert">${esc(message)}</p>`:''}${password?'<form action="/admin/password" method="post"><label for="pw">Dashboard password</label><input id="pw" name="password" type="password" required maxlength="512" autocomplete="current-password"><button type="submit">Unlock report</button></form><form action="/admin/logout" method="post"><button class="adm-plain" type="submit">Use another account</button></form>':'<a class="adm-button" href="/admin/login">Continue with GitHub <span aria-hidden="true">→</span></a>'}</section>`;
-  const labels = [['views','Page views'],['visitorDays','Visitor-days'],['average','Views / visitor-day'],['today','Today · views / visitors']];
-  const ranks = [['paths','Pages'],['entries','Entry pages'],['referrers','Referring domains'],['countries','Countries'],['devices','Devices'],['browsers','Browsers'],['systems','Operating systems']];
-  const panel = `<div class="adm-head"><div><p class="adm-kicker">NP. / OWNER ANALYTICS</p><h1>Traffic report<span class="adm-mark">.</span></h1></div><div class="adm-controls"><div role="group" aria-label="Report window" id="windows">${[7,30,90,365].map(n=>`<button type="button" data-days="${n}" aria-pressed="${n===30}">${n}d</button>`).join('')}</div><button id="refresh" type="button">Refresh</button></div></div><p id="notice" role="status" aria-live="polite">Loading the report…</p><div id="report-data" hidden><div class="adm-kpis">${labels.map(([id,label])=>`<div><span>${label}</span><strong id="v-${id}">—</strong></div>`).join('')}</div><p id="coverage" class="adm-caption"></p><section class="adm-panel"><header><div><p class="adm-kicker">01 / WAVEFORM</p><h2>Daily traffic</h2></div><p class="adm-key"><i></i>Views &nbsp; <i></i>Visitors</p></header><div id="wave"></div><details><summary>Read daily values</summary><div class="adm-scroll" id="daily-values"></div></details></section><section class="adm-panel"><header><div><p class="adm-kicker">02 / ACTIVITY MAP</p><h2>When readers visit</h2></div><small>Weekday × hour</small></header><div id="heat"></div></section><section class="adm-panel"><header><div><p class="adm-kicker">03 / BREAKDOWN</p><h2>Where visits come from</h2></div><small>Top 10 by views</small></header><div class="adm-ranks">${ranks.map(([id,label])=>`<section><h3>${label}</h3><ol id="rank-${id}"></ol></section>`).join('')}</div></section><section class="adm-panel"><header><div><p class="adm-kicker">04 / EVENT LOG</p><h2>Recent visits</h2></div><small>Latest 50 in window</small></header><div class="adm-scroll" id="event-log"></div></section></div>`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${report?'Traffic report':'Owner access'} · Nolan Pierce</title><link rel="stylesheet" href="${SITE}/assets/style.css"><link rel="stylesheet" href="${SITE}/assets/admin.css">${report?'<script src="/admin/ui.js" defer></script>':''}</head><body class="adm-body"><a class="adm-skip" href="#main">Skip to content</a><header class="adm-top"><div><a class="brand" href="${SITE}/"><span class="np">np.</span> <span>field notes</span></a><span class="adm-part">/ &nbsp;admin</span><span class="adm-spacer"></span>${report?'<form action="/admin/logout" method="post"><button class="adm-plain" type="submit">Sign out</button></form>':'<a href="'+SITE+'/">Back to blog</a>'}</div></header><main id="main" class="adm-main">${report?panel:gate}</main><footer class="adm-foot">Nolan Pierce &nbsp; / &nbsp; Private analytics</footer></body></html>`;
+  const alert = message ? `<p class="adm-alert" role="alert">${both(esc(ZH[message] || message), esc(message))}</p>` : '';
+  const gate = `<section class="adm-gate"><p class="adm-kicker">${both('站长专用','OWNER ACCESS')} &nbsp; / &nbsp; ${password ? '02' : '01'} OF 02</p><h1>${password ? both('解锁报表。','Unlock your report.') : both('私人工作区。','Private workspace.')}</h1><p>${password ? both('GitHub 身份已验证。请输入单独设置的后台密码。','GitHub identity verified. Enter your separate dashboard password.') : both('仅限管理员：先用站长的 GitHub 账号登录，再输入后台密码。','Admins only: sign in with the owner GitHub account, then confirm your dashboard password.')}</p>${alert}${password?`<form action="/admin/password" method="post"><label for="pw">${both('后台密码','Dashboard password')}</label><input id="pw" name="password" type="password" required maxlength="512" autocomplete="current-password"><button type="submit">${both('解锁报表','Unlock report')}</button></form><form action="/admin/logout" method="post"><button class="adm-plain" type="submit">${both('换一个账号','Use another account')}</button></form>`:`<a class="adm-button" href="/admin/login">${both('用 GitHub 登录','Continue with GitHub')} <span aria-hidden="true">→</span></a>`}</section>`;
+  const labels = [['views','页面浏览量','Page views'],['visitorDays','访客天数','Visitor-days'],['average','每访客天浏览','Views / visitor-day'],['today','今日 · 浏览 / 访客','Today · views / visitors']];
+  const ranks = [['paths','页面','Pages'],['entries','入口页','Entry pages'],['referrers','来源域名','Referring domains'],['countries','国家/地区','Countries'],['devices','设备','Devices'],['browsers','浏览器','Browsers'],['systems','操作系统','Operating systems']];
+  const panel = `<div class="adm-head"><div><p class="adm-kicker">NP. / ${both('站长统计','OWNER ANALYTICS')}</p><h1>${both('访问报表','Traffic report')}<span class="adm-mark">.</span></h1></div><div class="adm-controls"><div role="group" aria-label="报表时间范围" data-aria-en="Report window" id="windows">${[7,30,90,365].map(n=>`<button type="button" data-days="${n}" aria-pressed="${n===30}">${both(n+' 天',n+'d')}</button>`).join('')}</div><button id="refresh" type="button">${both('刷新','Refresh')}</button></div></div><p id="notice" role="status" aria-live="polite">${both('正在加载报表…','Loading the report…')}</p><div id="report-data" hidden><div class="adm-kpis">${labels.map(([id,zh,en])=>`<div><span>${both(zh,en)}</span><strong id="v-${id}">—</strong></div>`).join('')}</div><p id="coverage" class="adm-caption"></p><section class="adm-panel"><header><div><p class="adm-kicker">01 / ${both('波形','WAVEFORM')}</p><h2>${both('每日访问','Daily traffic')}</h2></div><p class="adm-key"><i></i>${both('浏览','Views')} &nbsp; <i></i>${both('访客','Visitors')}</p></header><div id="wave"></div><details><summary>${both('查看每日数值','Read daily values')}</summary><div class="adm-scroll" id="daily-values"></div></details></section><section class="adm-panel"><header><div><p class="adm-kicker">02 / ${both('活跃时段','ACTIVITY MAP')}</p><h2>${both('读者何时访问','When readers visit')}</h2></div><small>${both('星期 × 小时','Weekday × hour')}</small></header><div id="heat"></div></section><section class="adm-panel"><header><div><p class="adm-kicker">03 / ${both('细分','BREAKDOWN')}</p><h2>${both('访问来源','Where visits come from')}</h2></div><small>${both('按浏览量前 10','Top 10 by views')}</small></header><div class="adm-ranks">${ranks.map(([id,zh,en])=>`<section><h3>${both(zh,en)}</h3><ol id="rank-${id}"></ol></section>`).join('')}</div></section><section class="adm-panel"><header><div><p class="adm-kicker">04 / ${both('访问日志','EVENT LOG')}</p><h2>${both('最近访问','Recent visits')}</h2></div><small>${both('时间范围内最新 50 条','Latest 50 in window')}</small></header><div class="adm-scroll" id="event-log"></div></section></div>`;
+  const icons = '<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>';
+  const prefs = `<button class="pref" type="button" data-pref="lang">${both('EN','中文')}</button><button class="pref" type="button" data-pref="theme">${icons}</button>`;
+  const title = report ? ['访问报表','Traffic report'] : ['站长入口','Owner access'];
+  return `<!doctype html><html lang="zh-CN" data-lang="zh" data-title-en="${title[1]} · Nolan Pierce"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${title[0]} · Nolan Pierce</title><link rel="stylesheet" href="${SITE}/assets/style.css"><link rel="stylesheet" href="${SITE}/assets/admin.css"><script src="/admin/prefs.js"></script>${report?'<script src="/admin/ui.js" defer></script>':''}</head><body class="adm-body"><a class="adm-skip" href="#main">${both('跳到正文','Skip to content')}</a><header class="adm-top"><div><a class="brand" href="${SITE}/"><span class="np">np.</span> <span>${both('现场笔记','field notes')}</span></a><span class="adm-part">/ &nbsp;${both('后台','admin')}</span><span class="adm-spacer"></span>${report?`<form action="/admin/logout" method="post"><button class="adm-plain" type="submit">${both('退出登录','Sign out')}</button></form>`:`<a class="adm-back" href="${SITE}/">${both('返回博客','Back to blog')}</a>`}${prefs}</div></header><main id="main" class="adm-main">${report?panel:gate}</main><footer class="adm-foot">Nolan Pierce &nbsp; / &nbsp; ${both('私人统计 · 仅管理员可见','Private analytics · admins only')}</footer></body></html>`;
+}
+
+// Theme / language for the admin pages only. Its own keys (npa:*): this origin does not
+// share storage with the public site. Served same-origin so the CSP (script-src 'self') allows it.
+function adminPrefs() {
+  'use strict';
+  const root = document.documentElement, zhTitle = document.title;
+  const system = matchMedia('(prefers-color-scheme: light)');
+  const WORDS = {zh:{lang:'Switch to English',dark:'切换到浅色模式',light:'切换到深色模式'},en:{lang:'切换到中文',dark:'Switch to light mode',light:'Switch to dark mode'}};
+  const load = k => { try { return localStorage.getItem(k); } catch { return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const savedTheme = () => { const t = load('npa:theme'); return t === 'light' || t === 'dark' ? t : null; };
+  const setTheme = t => root.setAttribute('data-theme', t);
+  const setLang = l => { root.setAttribute('data-lang', l); root.lang = l === 'en' ? 'en' : 'zh-CN'; document.title = l === 'en' ? root.dataset.titleEn : zhTitle; };
+  setTheme(savedTheme() || (system.matches ? 'light' : 'dark'));
+  setLang(load('npa:lang') === 'en' ? 'en' : 'zh');
+  function refresh() {
+    const lang = root.dataset.lang, w = WORDS[lang];
+    document.querySelectorAll('[data-pref="lang"]').forEach(b => { b.setAttribute('aria-label', w.lang); b.title = w.lang; });
+    document.querySelectorAll('[data-pref="theme"]').forEach(b => { const t = w[root.dataset.theme]; b.setAttribute('aria-label', t); b.title = t; });
+    document.querySelectorAll('[data-aria-en]').forEach(el => { if (!el.hasAttribute('data-aria-zh')) el.setAttribute('data-aria-zh', el.getAttribute('aria-label') || ''); el.setAttribute('aria-label', el.getAttribute(lang === 'en' ? 'data-aria-en' : 'data-aria-zh')); });
+    document.dispatchEvent(new CustomEvent('npa:lang'));
+  }
+  function wire() {
+    document.querySelectorAll('[data-pref="lang"]').forEach(b => b.addEventListener('click', () => { const l = root.dataset.lang === 'en' ? 'zh' : 'en'; setLang(l); save('npa:lang', l); refresh(); }));
+    document.querySelectorAll('[data-pref="theme"]').forEach(b => b.addEventListener('click', () => { const t = root.dataset.theme === 'light' ? 'dark' : 'light'; setTheme(t); save('npa:theme', t); refresh(); }));
+    refresh();
+  }
+  system.addEventListener('change', () => { if (!savedTheme()) { setTheme(system.matches ? 'light' : 'dark'); refresh(); } });
+  addEventListener('storage', e => { if (e.key === 'npa:theme' && savedTheme()) setTheme(savedTheme()); if (e.key === 'npa:lang') setLang(e.newValue === 'en' ? 'en' : 'zh'); if (e.key === 'npa:theme' || e.key === 'npa:lang') refresh(); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
 }
 
 function dashboardClient() {
   'use strict';
   const $=id=>document.getElementById(id), num=n=>Number(n).toLocaleString('en-US');
+  const zh=()=>document.documentElement.dataset.lang!=='en', t=(z,e)=>zh()?z:e;
+  let lastData=null, lastNotice=null;
+  const say=(z,e)=>{lastNotice=[z,e];$('notice').textContent=t(z,e);};
   const make=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
   const svg=(tag,attrs={})=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [name,val] of Object.entries(attrs))el.setAttribute(name,val);return el;};
   const paint=(tag,parent,attrs,text)=>{const el=svg(tag,attrs);if(text!=null)el.textContent=text;parent.append(el);return el;};
@@ -349,26 +415,28 @@ function dashboardClient() {
   const offset=()=>-new Date().getTimezoneOffset();
   function time(ms,off){return new Date(ms+off*60000).toISOString().slice(0,19).replace('T',' ');}
   function table(title,heads,rows){const t=make('table'),caption=make('caption',title);caption.className='adm-sr';t.append(caption);const thr=t.createTHead().insertRow();for(const h of heads){const c=make('th',h);c.scope='col';thr.append(c);}const body=t.createTBody();for(const row of rows){const tr=body.insertRow();for(const val of row){tr.insertCell().textContent=val;}}return t;}
-  function chart(rows){const w=700,h=182,x0=42,x1=w-18,y0=16,y1=h-29;const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':'Daily page views and daily visitors'});const top=Math.max(1,...rows.map(r=>r.views),...rows.map(r=>r.visitors));const x=i=>x0+(x1-x0)*i/Math.max(1,rows.length-1), y=n=>y1-(y1-y0)*n/top;
+  function chart(rows){const w=700,h=182,x0=42,x1=w-18,y0=16,y1=h-29;const root=svg('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':t('每日页面浏览量与每日访客数','Daily page views and daily visitors')});const top=Math.max(1,...rows.map(r=>r.views),...rows.map(r=>r.visitors));const x=i=>x0+(x1-x0)*i/Math.max(1,rows.length-1), y=n=>y1-(y1-y0)*n/top;
     for(const val of new Set([0,Math.round(top/2),top])){paint('line',root,{x1:x0,x2:x1,y1:y(val),y2:y(val),class:'adm-grid'});paint('text',root,{x:x0-7,y:y(val)+4,'text-anchor':'end'},num(val));}
     for(const [field,cl] of [['views','adm-line-pv'],['visitors','adm-line-uv']]){const d=rows.map((r,i)=>i?`H ${x(i).toFixed(1)} V ${y(r[field]).toFixed(1)}`:`M ${x0} ${y(r[field]).toFixed(1)}`).join(' ');paint('path',root,{d,class:cl,fill:'none','vector-effect':'non-scaling-stroke'});}
     if(rows.length){for(const i of new Set([0,Math.floor(rows.length/2),rows.length-1]))paint('text',root,{x:x(i),y:h-6,'text-anchor':i===0?'start':i===rows.length-1?'end':'middle'},rows[i].day.slice(5));}return root;
   }
-  function heatMap(hours){const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const map=new Map(hours.map(r=>[r.weekday*24+r.hour,r.views])),max=Math.max(1,...hours.map(h=>h.views));const root=svg('svg',{viewBox:'0 0 678 143',role:'img','aria-label':'Traffic intensity by weekday and hour; darker accent means more visits'});
+  function heatMap(hours){const names=zh()?['周日','周一','周二','周三','周四','周五','周六']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const map=new Map(hours.map(r=>[r.weekday*24+r.hour,r.views])),max=Math.max(1,...hours.map(h=>h.views));const root=svg('svg',{viewBox:'0 0 678 143',role:'img','aria-label':t('按星期和小时统计的访问强度，颜色越深访问越多','Traffic intensity by weekday and hour; darker accent means more visits')});
     for(let h=0;h<24;h+=3)paint('text',root,{x:46+h*26,y:12},String(h).padStart(2,'0'));
-    for(let j=0;j<7;j++){const day=(j+1)%7;paint('text',root,{x:0,y:31+j*16},names[day]);for(let h=0;h<24;h++){const n=map.get(day*24+h)||0;const cell=paint('rect',root,{x:46+h*26,y:21+j*16,width:23,height:12,rx:2,class:'adm-level-'+(n?Math.ceil(4*n/max):0)});paint('title',cell,{},`${names[day]} ${String(h).padStart(2,'0')}:00 · ${n} views`);}}return root;}
-  function render(d){const t=d.totals;for(const [id,value] of Object.entries({views:num(t.views),visitorDays:num(t.visitorDays),average:t.visitorDays?(t.views/t.visitorDays).toFixed(1):'—',today:num(t.todayViews)+' / '+num(t.todayVisitors)}))$('v-'+id).textContent=value;
-    const delta=t.previousViews===null?'Prior window not fully tracked.':`${num(t.previousViews)} views in prior window.`;
-    $('coverage').textContent=`${num(d.lifetimeViews)} all-time page views. Detailed tracking since ${time(d.trackedSince,d.offset).slice(0,10)}. ${delta} Visitor-days sum daily visitors; not distinct people across days.`;
-    $('wave').replaceChildren(chart(d.trend));$('daily-values').replaceChildren(table('Daily totals',['Date','Views','Visitors'],d.trend.map(r=>[r.day,num(r.views),num(r.visitors)])));
+    for(let j=0;j<7;j++){const day=(j+1)%7;paint('text',root,{x:0,y:31+j*16},names[day]);for(let h=0;h<24;h++){const n=map.get(day*24+h)||0;const cell=paint('rect',root,{x:46+h*26,y:21+j*16,width:23,height:12,rx:2,class:'adm-level-'+(n?Math.ceil(4*n/max):0)});paint('title',cell,{},`${names[day]} ${String(h).padStart(2,'0')}:00 · ${t(n+' 次浏览',n+' views')}`);}}return root;}
+  function render(d){lastData=d;const tt=d.totals;for(const [id,value] of Object.entries({views:num(tt.views),visitorDays:num(tt.visitorDays),average:tt.visitorDays?(tt.views/tt.visitorDays).toFixed(1):'—',today:num(tt.todayViews)+' / '+num(tt.todayVisitors)}))$('v-'+id).textContent=value;
+    const since=time(d.trackedSince,d.offset).slice(0,10);
+    const delta=tt.previousViews===null?t('上一时段的数据不完整。','Prior window not fully tracked.'):t(`上一时段 ${num(tt.previousViews)} 次浏览。`,`${num(tt.previousViews)} views in prior window.`);
+    $('coverage').textContent=t(`累计 ${num(d.lifetimeViews)} 次页面浏览。自 ${since} 起记录详细数据。${delta}访客天数是每日访客数之和，不是跨天去重后的人数。`,`${num(d.lifetimeViews)} all-time page views. Detailed tracking since ${since}. ${delta} Visitor-days sum daily visitors; not distinct people across days.`);
+    $('wave').replaceChildren(chart(d.trend));$('daily-values').replaceChildren(table(t('每日合计','Daily totals'),t(['日期','浏览','访客'],['Date','Views','Visitors']),d.trend.map(r=>[r.day,num(r.views),num(r.visitors)])));
     $('heat').replaceChildren(heatMap(d.hours));
-    for(const [k,list] of Object.entries(d.ranks)){const ol=$('rank-'+k);if(!ol)continue;const entries=list.map(r=>{const li=make('li');li.append(make('span',r.label),make('b',num(r.n)));return li;});ol.replaceChildren(...(entries.length?entries:[make('li','No visits in this window.')]));}
-    $('event-log').replaceChildren(d.events.length?table('Recent visits',['Time','Page','Source','Country','Device / browser / OS','First today'],d.events.map(e=>[time(e.at,d.offset),e.path,e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?'Yes':'—'])):make('p','No visits recorded in this window.'));
-    $('report-data').hidden=false;const sign=d.offset<0?'−':'+';const minutes=Math.abs(d.offset);$('notice').textContent=`${d.days}-day window · UTC${sign}${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')} · Updated ${time(d.updated,d.offset).slice(11)}`;
+    for(const [k,list] of Object.entries(d.ranks)){const ol=$('rank-'+k);if(!ol)continue;const entries=list.map(r=>{const li=make('li');li.append(make('span',r.label),make('b',num(r.n)));return li;});ol.replaceChildren(...(entries.length?entries:[make('li',t('这个时间范围内没有访问。','No visits in this window.'))]));}
+    $('event-log').replaceChildren(d.events.length?table(t('最近访问','Recent visits'),t(['时间','页面','来源','国家/地区','设备 / 浏览器 / 系统','今日首访'],['Time','Page','Source','Country','Device / browser / OS','First today']),d.events.map(e=>[time(e.at,d.offset),e.path,e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?t('是','Yes'):'—'])):make('p',t('这个时间范围内没有访问记录。','No visits recorded in this window.')));
+    $('report-data').hidden=false;const sign=d.offset<0?'−':'+';const minutes=Math.abs(d.offset);const zone=`UTC${sign}${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`,at=time(d.updated,d.offset).slice(11);say(`${d.days} 天范围 · ${zone} · 更新于 ${at}`,`${d.days}-day window · ${zone} · Updated ${at}`);
     document.querySelectorAll('[data-days]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.days===d.days)));
   }
-  function clearAndLogin(){leaving=true;last=null;pending?.abort();$('report-data').replaceChildren();$('report-data').hidden=true;$('notice').textContent='Session ended. Returning to sign-in…';location.replace('/admin');}
-  async function load(){if(leaving)return;const id=++serial;pending?.abort();const ctl=new AbortController();pending=ctl;const timer=setTimeout(()=>ctl.abort(),15000);$('notice').textContent='Updating report…';try{const r=await fetch(`/admin/api/report?days=${days}&offset=${offset()}`,{cache:'no-store',credentials:'same-origin',signal:ctl.signal});if(id!==serial)return;if(r.status===401||r.status===403){clearAndLogin();return;}if(!r.ok)throw Error('unavailable');const d=await r.json();if(id!==serial)return;if(!d.ok)throw Error('unavailable');render(d);last=d.days;lastTime=Date.now();}catch{if(id!==serial||leaving)return;days=last||days;$('notice').textContent=last?`Update failed · still showing last successful ${last}-day report. Use Refresh to retry.`:'No report available. Use Refresh to retry.';}finally{clearTimeout(timer);if(id===serial)pending=null;}}
+  function clearAndLogin(){leaving=true;last=null;pending?.abort();$('report-data').replaceChildren();$('report-data').hidden=true;say('会话已结束，正在返回登录页…','Session ended. Returning to sign-in…');location.replace('/admin');}
+  async function load(){if(leaving)return;const id=++serial;pending?.abort();const ctl=new AbortController();pending=ctl;const timer=setTimeout(()=>ctl.abort(),15000);say('正在更新报表…','Updating report…');try{const r=await fetch(`/admin/api/report?days=${days}&offset=${offset()}`,{cache:'no-store',credentials:'same-origin',signal:ctl.signal});if(id!==serial)return;if(r.status===401||r.status===403){clearAndLogin();return;}if(!r.ok)throw Error('unavailable');const d=await r.json();if(id!==serial)return;if(!d.ok)throw Error('unavailable');render(d);last=d.days;lastTime=Date.now();}catch{if(id!==serial||leaving)return;days=last||days;if(last)say(`更新失败 · 仍显示上次成功加载的 ${last} 天报表。点“刷新”重试。`,`Update failed · still showing last successful ${last}-day report. Use Refresh to retry.`);else say('暂无报表，点“刷新”重试。','No report available. Use Refresh to retry.');}finally{clearTimeout(timer);if(id===serial)pending=null;}}
+  document.addEventListener('npa:lang',()=>{if(lastData&&!leaving)render(lastData);else if(lastNotice)$('notice').textContent=t(...lastNotice);});
   document.querySelectorAll('[data-days]').forEach(b=>b.addEventListener('click',()=>{days=+b.dataset.days;load();}));$('refresh').addEventListener('click',load);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!pending&&Date.now()-lastTime>60000)load();});window.addEventListener('pageshow',e=>{if(e.persisted){$('report-data').hidden=true;load();}});window.addEventListener('pagehide',()=>{$('report-data').hidden=true;});setInterval(()=>{if(!document.hidden&&!pending)load();},60000);load();
 }

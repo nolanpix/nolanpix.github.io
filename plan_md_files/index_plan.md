@@ -162,3 +162,30 @@ the nav, and the "what is this / how to use it" explainer in one object.
 
 ### 统一提问
 1. 后台管理页要不要也加中英与深浅色切换？那是另一个域名，localStorage 不共享，需要单独实现。
+
+## 7. 改进策略（个人网页加管理员入口；后台独立的中英与深浅色切换）
+
+- 需求（2026-11-26）：在个人网页上放后台管理页入口，并标明只有管理员可以进入；后台管理页也要有语言和主题两个按钮，切换状态单独记忆。此前 §6 统一提问的第 1 题由此得到答复：要。
+- 入口：首页和文章页顶栏的 GitHub、X 后面加一个带锁图标、虚线边框的链接，文案为“后台 · 仅管理员”（英文：Admin · owner only）；页脚也加一条“站长后台（仅管理员可进入）”。
+  - 链接带 `rel="nofollow"`；`aria-label` 和 `title` 都写明“仅管理员可进入”。
+  - 窄屏（不超过 760px）只显示锁图标，读屏仍会读出完整文字。
+  - 文章页入口由 tools/gen_notes.py 模板生成。
+  - 入口只是指路，权限仍由 Worker 的 GitHub 站长身份校验加后台密码两道关卡控制，这里没有任何改动。
+- 后台切换（worker/counter.js）：
+  - 页面默认中文，所有界面文字成对输出 `lang="zh-CN"` / `lang="en"`，沿用主站 style.css 的隐藏规则。
+  - 服务端错误提示用 `ZH` 对照表输出中英两份，例如“密码不正确，请重试。”。
+  - 新增 `/admin/prefs.js`，由 `adminPrefs()` 函数序列化而成。它与后台同源，所以 CSP 的 `script-src 'self'` 能放行；脚本不含任何数据，公开可读，缓存 1 小时。
+  - 偏好存在后台域名下的 localStorage，键名为 `npa:lang` 和 `npa:theme`，与主站的 `np:*` 互不影响。没选过主题时跟随系统设置。
+  - 报表脚本 `dashboardClient()` 在运行时生成的文字也做了双语：说明行、状态行、表头、热力图的星期、空状态、图表的 aria 描述。切换语言时直接用上一次取到的数据重新渲染，不会重新请求报表。
+- 兼容：Worker 部署要站长手动操作，在这之前线上仍是旧版 Worker。admin.css 保留了旧页面依赖的选择器 `.adm-top > div > a:last-child`，所以旧版后台页在新样式下显示不变；入口链接指向的 `/admin` 新旧版都能用。
+- 验证（/tmp/test_wksel/node/admin_e2e.mjs，8 组全部通过）。测试在本地运行真实的 worker/counter.js，并把线上 Worker 和博客的域名都指到本地，所以真实的 CSP 和 `__Host-` Cookie 都在起作用。GitHub 和 D1 用本地替身代替。
+  - 主站入口：首页和文章页、中英文、390 和 330 宽度下都正常。
+  - 后台登录页：默认中文，主题跟随系统。
+  - 切换后的偏好写在 `npa:*` 键下，不写主站的 `np:*`。
+  - GitHub 登录、密码页、报表三个阶段都保留了所选的语言和主题；密码错误的提示显示为当前语言，切换语言后实时变化。
+  - 报表数据随语言重新渲染，不重新请求。
+  - 权限边界不变：没有完成两道关卡时，ui.js 和报表接口都返回 401；用非站长的 GitHub 账号登录会被拒绝，也不会下发会话 Cookie。
+  - 主站 §6 的 11 组回归测试全部通过。
+- 测试中遇到的坑：
+  - Playwright 用 `route.fulfill` 返回 3xx 后，跟随跳转的下一个请求不会再经过 route，而是直接去线上的旧版 Worker。测试里改成返回 200，再用 `location.replace` 跳转。
+  - Node 没有 Workers 才有的 `crypto.subtle.timingSafeEqual`，测试里用 `node:crypto` 补上了。
