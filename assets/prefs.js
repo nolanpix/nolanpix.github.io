@@ -8,6 +8,7 @@
  *                            lang="en" are shown only in their language
  * Buttons: <button data-pref="lang"> and <button data-pref="theme">.
  * Elements with data-aria-en get their aria-label swapped with the language.
+ * Admin links (another origin) carry the current theme as ?theme=light|dark.
  */
 (function () {
   "use strict";
@@ -36,12 +37,26 @@
   }
   function applyTheme(theme) {
     root.setAttribute("data-theme", theme);
+    syncAdminLinks();
   }
   function applyLang(lang) {
     root.setAttribute("data-lang", lang);
     root.lang = lang === "en" ? "en" : "zh-CN";
     var enTitle = root.getAttribute("data-title-en");
     document.title = lang === "en" && enTitle ? enTitle : zhTitle;
+  }
+  // The admin runs on the Worker origin and cannot read np:theme. Hand the tone over in
+  // the link; its page applies it and remembers it under npa:theme.
+  function syncAdminLinks() {
+    var theme = root.getAttribute("data-theme");
+    each('a[href*="/admin"]', function (a) {
+      try {
+        var u = new URL(a.getAttribute("href"), location.href);
+        if (u.origin === location.origin) return;
+        u.searchParams.set("theme", theme);
+        a.setAttribute("href", u.href);
+      } catch (e) { /* keep the link as written */ }
+    });
   }
 
   applyTheme(savedTheme() || (system && system.matches ? "light" : "dark"));
@@ -82,6 +97,7 @@
         refresh();
       });
     });
+    syncAdminLinks();
     refresh();
   }
 

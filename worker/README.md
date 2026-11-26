@@ -36,6 +36,7 @@
 后台页默认显示中文，右上角有语言和主题两个按钮，选择保存在本 Worker 域名的 localStorage（`npa:lang` / `npa:theme`），与博客的设置互不影响。
 按钮脚本由 Worker 自己在 `/admin/prefs.js` 提供，以满足 CSP `script-src 'self'`，不需要新增任何绑定或密钥。
 改动只在 `worker/counter.js`：在 Cloudflare 控制台用新代码整体替换并部署即可，原有配置（D1、密钥、密码哈希）不变。
+从主站进入后台时，入口链接会带 `?theme=light|dark`（`assets/prefs.js` 按当前生效主题实时写入）。后台读到后先应用并存入 `npa:theme`，再把参数从地址栏移除，后续登录跳转靠已保存的值保持；不带参数或参数非法时按已存偏好、否则跟随系统。该参数需要部署本版 `worker/counter.js` 才生效，旧的已部署版本会忽略它。
 
 ## 报表的页面短名（2026-11-26）
 

@@ -329,3 +329,21 @@ the nav, and the "what is this / how to use it" explainer in one object.
   - lede 改为“芯片之外还有写作、AI 和其他领域的长文”，英文 “also cover writing, AI, and other fields beyond chips”。
   - 只改首页表达；左栏/首页分组里的真实主题名“数学与科学 / Math & science”以及黎曼文章的 `数学` 标签保留不动。
 - 验证：同一套 headless 检查（1440/390、中英切换、无横向溢出）。
+
+## 14. 改进策略（从主站进后台时沿用主站的深浅色，2026-11-27）
+
+- 需求（用户原话）：nolanpix 的个人网站跳转到后台管理页时也要统一色调；从网站去后台时，网站是明亮色调，后台也要用明亮色调。
+- 根因：后台在 Worker 的另一个源（`nolanpix-counter.song66666.workers.dev`），与 GitHub Pages 不共享 localStorage，`np:theme` 与 `npa:theme` 互不可见。后台进入时只能按它自己的保存值或系统主题。
+- 方案：主站把“当前生效的主题”写进后台入口链接的查询串（`?theme=light|dark`），后台读取后应用、存入 `npa:theme`，再从地址栏移除参数。
+  - `assets/prefs.js`：新增 `syncAdminLinks()`，对所有跨源 `a[href*="/admin"]` 用 URL API 设置 `theme` 参数；`applyTheme()`、DOM 就绪、系统主题变化与跨标签页同步时都会刷新链接。链接在页面载入时即带参数，中键、复制链接同样有效，无需改 index/404/文章模板。
+  - `worker/counter.js` 的 `adminPrefs()`：读取 `location.search` 的 `theme`，只接受 `light`/`dark`；命中则 `save('npa:theme')` 并 `history.replaceState` 去掉参数（避免刷新或回退时旧参数覆盖用户后来在后台切换的选择），再按“URL 参数 → 已存偏好 → 系统”的优先级设置 `data-theme`。脚本在 `<head>` 同步执行，首屏即正确，无闪色。
+  - 登录流程不受影响：参数只落在 `/admin` 这一次，随后 `/admin/login`、OAuth 回调、密码页的跳转都靠已存下的 `npa:theme` 保持。
+  - 脚本地址加 `?v=2` 作为缓存戳：`/admin/prefs.js` 之前是 `public, max-age=3600`，不加戳时部署后浏览器可能继续用旧脚本一小时。
+- 兼容：主站旧链接（无参数）仍可用；未部署新 Worker 时参数被旧版忽略，行为与现在相同；后台自己的主题按钮不变，切换后写 `npa:theme`。
+- 验证：
+  - `/tmp/test_wksel/node/admin_e2e.mjs` 17 组全部通过。新增 3 组：
+    - 主站深浅色切换时，顶栏与页脚两个后台入口的 href 实时变为 `?theme=light|dark`；
+    - 从主站点击入口实际进入后台：系统为深色时后台仍以浅色打开，`npa:theme=light`，地址栏已无参数；
+    - 直接访问 `/admin?theme=light`（系统深色）首屏即浅色；刷新后保持；`?theme=blue` 被忽略；`?theme=light` 覆盖已存的 dark。
+  - 回归：`/tmp/test_wksel/node/i18n.mjs` 11 组通过。
+- 上线：主站（`assets/prefs.js`）随 GitHub Pages 发布；后台需站长在 Cloudflare 控制台用本版 `worker/counter.js` 整体替换并部署，之后 `?theme=` 才会生效。部署前旧 Worker 只是忽略该参数。
