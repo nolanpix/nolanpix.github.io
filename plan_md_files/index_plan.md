@@ -120,3 +120,20 @@ the nav, and the "what is this / how to use it" explainer in one object.
 - Q: real repos to feature? The GitHub account is new; use placeholder-but-honest
   "coming soon" repo cards pointing at github.com/nolanpix, rather than inventing
   repo names. Revisit when real repos exist.
+
+## 5. 改进策略（Safari 选中文字时两侧空白被整片高亮）
+
+- 现象：Safari 里拖选正文，高亮会铺满左右两侧空白；Chrome 只高亮文字。截图实测：Safari 1432 宽时选区有 38%–56% 的像素落在正文栏之外。
+- 根因：WebKit 在块级容器里补画 selection gaps，即块与块之间、块两侧的空隙。`body` 是普通块容器，它的子块 `header` / `main` / `footer` 两侧的页边距就被当成空隙涂满。Chrome（LayoutNG）不画这类空隙。
+- 方案对比，在 Mac WKWebView（与 Safari 同引擎）离屏渲染，按像素测量：
+  - `body` 单列 grid（采用）：grid 容器不给子项补画空隙。选区画在正文栏外的像素在 1432、820、390 三个宽度下都是 0。
+  - 对 `header` / `main` / `footer` 加 `transform`（2026-11-10 修 markdown-preview 时的做法）：只在 `main` 内部选择时有效。全选跨越 header 到 footer 时，`body` 仍会补画，index 页约 79% 的高亮落在空白上，不采用。
+  - 对 `body` 用 flex：与 grid 效果相同，但改动面更大，不采用。
+- 改动：`assets/style.css` 中 `body` 增加 `display: grid; grid-template-columns: minmax(0, 1fr);`。`minmax(0, 1fr)` 防止宽内容撑开唯一的一列。
+- 验证（全部用本地副本，不碰线上）：
+  - 选区：10 种选择 × 3 个宽度，正文栏外的高亮像素为 0；修复前最多约 539 万像素。
+  - 未选中时，滚动条自动隐藏模式：6 个页面 × 4 个宽度，逐元素位置和逐像素都与修复前一致。
+  - Chromium：6 个页面 × 4 个宽度，24/24 逐元素位置和整页截图一致。
+  - 长代码块（单独构造的测试页，Always 模式，1432 / 390 各跑两次）：布局与修复前一致。
+- 已知残留：只在「始终显示滚动条」（例如接了鼠标的 Mac）且窗口宽度不超过约 489px 时出现。后台报表页的热力图出现横向滚动条，所在面板偶尔会少算 17px，滚动条压住面板底边约 2px。原因是 WebKit 会延后处理 grid 子项内部滚动框的滚动条，祖先高度没有重新计算。测到的结果有时有、有时没有：`contain: layout` 在第一次测试时通过，重测失败。窄屏下改用 `overflow-x: scroll` 可以确定性规避，但要写死断点宽度，所以先不加，等站长决定。
+- 教训：结果不稳定的测试必须重复跑；从候选方案里选之前，先逐项读完筛选结果。
