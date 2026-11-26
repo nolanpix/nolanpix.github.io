@@ -78,7 +78,7 @@ port the same endpoints to Durable Objects (atomic) or D1 — client unchanged.
 - Open item (needs the owner): deploy the Worker on the owner's Cloudflare
   account, then paste the `*.workers.dev` URL into `assets/stats.js`
   `STATS_ENDPOINT` and commit. Only then does the badge light up.
-  (Done 2026-11-25 by the owner: commit `1246b07`, endpoint
+  (Done 2026-11-25 by the owner: commit `70dfd74`, endpoint
   `https://nolanpix-counter.song66666.workers.dev/`. See §6.)
 
 ## 6. 改进策略（线上 `POST /hit` 一律 1101 的修复）
@@ -115,7 +115,7 @@ Miniflare 里跑。
   时，第二次 put 会被拒绝；现在这种情况返回 JSON 500，这一次不计数，徽标隐藏。按博客的访问量很少会碰到。
 - 写入额度：一次计数大约 2 次 KV 写入（限流键 + 页面计数），访客当天首次访问另加 3 次。免费额度
   1,000 次写入/天，大约够 300–400 次浏览/天。流量涨上来以后改用 Durable Objects 或 D1（§4）。
-- 2026-11-25 23:05 复验：用户按 eaa7b3b 重新部署后，线上 `/` pv=2、两篇笔记各 pv=1、dau=2；
+- 2026-11-25 23:05 复验：用户按 8d33a5a 重新部署后，线上 `/` pv=2、两篇笔记各 pv=1、dau=2；
   无 Origin / 外站 Origin 返回 403，`/../x` 返回 400 且带 CORS 头；Chrome 首页徽标显示
   `2 views / 2 today`。§6 的修复已在线上生效。
 

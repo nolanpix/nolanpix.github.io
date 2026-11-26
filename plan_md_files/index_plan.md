@@ -192,7 +192,7 @@ the nav, and the "what is this / how to use it" explainer in one object.
 
 ## 8. 改进策略（后台报表交互：悬停详情、键盘、筛选）
 
-- 需求（2026-11-26，用户已重新部署 c8101fb）：用户截图圈出“每日访问”波形图，希望鼠标放上去能看到更详细的数据，并让后台其他地方也能这样交互。确认的方案为“全部做”。
+- 需求（2026-11-26，用户已重新部署 307900f）：用户截图圈出“每日访问”波形图，希望鼠标放上去能看到更详细的数据，并让后台其他地方也能这样交互。确认的方案为“全部做”。
 - 实现（worker/counter.js 的 `dashboardClient()` 和 assets/admin.css）：
   - 全页共用一个悬停卡片：文字用 textContent 写入，位置通过 CSSOM 设置，CSP 不需要允许内联样式；卡片会贴边避让，不会超出屏幕。
   - 卡片的关闭方式：鼠标离开、点到别处、按 Esc、切换语言、页面滚动超过 24px。
@@ -276,3 +276,4 @@ the nav, and the "what is this / how to use it" explainer in one object.
     - 404：返回状态 404，样式正常加载，链接正确。
   - 回归：`mbti_site.mjs` 5 组、`i18n.mjs` 11 组、`admin_e2e.mjs` 15 组、`pages_fetch.mjs` 全部通过。`python3 tools/tests/test_gen_notes.py` 在 Python 3 和 3.6 下都是 OK；新增的检查覆盖左栏、首页刷新的幂等性、404 只用根相对链接、超过 5 篇时折叠、缺少标记时不写任何文件。
   - 回归：3 篇文章页与改动前逐字比对，只多出左栏这一段，其余字节完全不变。
+- 提交历史（2026-11-26，按站长要求）：全部提交的作者和提交者统一为 Nolan Pierce（GitHub noreply 邮箱），去掉共同作者行；只做了这一处内容调整：一份早期计划文档快照改为后来的中性措辞。改写后每个提交的日期和标题不变，最新提交的文件树与改写前完全一致，线上内容没有变化。本文和 `counter_plan.md` 里引用的提交号已换成改写后的新号。
