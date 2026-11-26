@@ -1,0 +1,14 @@
+{
+ "/notes/macro-placement-fast-repair.html": [
+  "宏单元摆放",
+  "Macro placement"
+ ],
+ "/notes/structuring-eco-work.html": [
+  "ECO 三道关卡",
+  "ECO gates"
+ ],
+ "/notes/rtl2gds-timing-closed.html": [
+  "RTL2GDS 踩坑",
+  "RTL2GDS pitfalls"
+ ]
+}

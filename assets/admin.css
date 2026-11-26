@@ -42,7 +42,7 @@
 #heat { overflow-x: auto; } #heat svg { max-height: 172px; min-width: 415px; }
 .adm-level-0 { fill: var(--line); }.adm-level-1 { fill: color-mix(in srgb,var(--accent) 28%,var(--panel)); }.adm-level-2 { fill: color-mix(in srgb,var(--accent) 50%,var(--panel)); }.adm-level-3 { fill: color-mix(in srgb,var(--accent) 74%,var(--panel)); }.adm-level-4 { fill: var(--accent); }
 .adm-panel summary { cursor: pointer; margin-block: 10px 0; padding: 3px 0; font-size: .83rem; color: var(--muted); }
-.adm-ranks { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,225px),1fr)); gap: 20px 26px; }
+.adm-ranks { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,225px),1fr)); gap: 24px 28px; }
 .adm-ranks ol { padding: 0; margin: 5px 0 0; list-style: none; }.adm-ranks li { padding: 5px 0; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .adm-ranks b { color: var(--fg); font: .86rem var(--adm-mono); }
 .adm-scroll { overflow: auto; max-height: 22rem; }.adm-scroll table { width: 100%; border-collapse: collapse; text-align: left; font: .82rem/1.5 var(--adm-mono); }.adm-scroll th,.adm-scroll td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }.adm-scroll th { color: var(--muted); font-weight: 500; }.adm-scroll td { overflow-wrap: anywhere; }#event-log table { min-width: 630px; }
@@ -63,7 +63,7 @@
 .adm-tip-head { margin: 0 0 6px; font-weight: 600; color: var(--fg); }
 .adm-tip dl { display: grid; grid-template-columns: auto auto; gap: 2px 18px; margin: 0; }
 .adm-tip dt { color: var(--muted); }
-.adm-tip dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.adm-tip dd { margin: 0; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .adm-tip-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 0; }
 .adm-tip-tags span { padding: 1px 7px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); color: var(--accent); }
 .adm-panel svg[tabindex], .adm-kpis > div[tabindex] { outline: none; }
@@ -81,9 +81,16 @@
 .adm-spark path { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
 .adm-spark.pv path { stroke: var(--accent); }
 .adm-spark.uv path { stroke: var(--fg); stroke-dasharray: 4 2; }
-.adm-ranks li:has(> .adm-rank) { padding: 0; }
-.adm-body .adm-rank { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; padding: 5px 6px; border: 1px solid transparent; border-radius: 5px; text-align: left; color: var(--muted); font: inherit; overflow-wrap: anywhere;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent) var(--share, 0%), transparent var(--share, 0%)) no-repeat; }
-.adm-body .adm-rank:hover { color: var(--fg); border-color: var(--line); }
-.adm-body .adm-rank[aria-pressed="true"] { color: var(--fg); border-color: var(--accent); background-color: color-mix(in srgb, var(--accent) 10%, transparent); }
+/* Ranks: one line per entry (name, count) over a thin share meter; no filled boxes.
+   Works with the DOM of both the current and the previous Worker (button.adm-rank > span + b, --share). */
+.adm-ranks li:has(> .adm-rank) { padding: 0; border-bottom: 0; }
+.adm-body .adm-rank { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; column-gap: 12px; width: 100%; padding: 7px 0 0; border: 0; border-radius: 3px; background: none; color: var(--muted); font: inherit; font-size: .9rem; line-height: 1.3; text-align: left; }
+.adm-body .adm-rank > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.adm-body .adm-rank::after { content: ""; grid-column: 1 / -1; height: 3px; margin-top: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 58%, transparent) var(--share, 0%), var(--line) var(--share, 0%)); }
+.adm-body .adm-rank:hover, .adm-body .adm-rank:focus-visible { color: var(--fg); }
+.adm-body .adm-rank:hover::after, .adm-body .adm-rank:focus-visible::after { background: linear-gradient(90deg, var(--accent) var(--share, 0%), var(--line) var(--share, 0%)); }
+.adm-body .adm-rank:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.adm-body .adm-rank[aria-pressed="true"], .adm-body .adm-rank[aria-pressed="true"] b { color: var(--accent); }
+.adm-body .adm-rank[aria-pressed="true"]::after { background: linear-gradient(90deg, var(--accent) var(--share, 0%), color-mix(in srgb, var(--accent) 22%, var(--line)) var(--share, 0%)); }
 .adm-filter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 10px; padding: 7px 10px; border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius: 6px; font: .8rem/1.4 var(--adm-mono); color: var(--fg); }

@@ -10,37 +10,48 @@
 #             assets/prefs.js shows one (Chinese by default). Body text is a tiny
 #             subset of Markdown (## heading, blank-line paragraphs, - bullets with
 #             indented continuation lines, > quote, `code`, *emphasis*). Output
-#             files are written next to this script under ../notes/.
+#             files are written next to this script under ../notes/. It also writes
+#             ../assets/pages.json: the short page names (zh, en) that the owner
+#             report (worker/counter.js) shows instead of long paths.
 # usage     :
-#   python3 gen_notes.py [-o OUT_DIR] [-d]
+#   python3 gen_notes.py [-o OUT_DIR] [-p PAGES_FILE] [-d]
 # parameters:
-#   -o/--out-dir (optional, path, default "../notes") - directory for the .html files,
-#                resolved relative to this script; created if missing.
-#   -d/--debug   (optional, flag, default False) - print each written path to stderr.
-# output    : one <slug>.html per entry in POSTS; prints "wrote N notes" to stdout.
+#   -o/--out-dir    (optional, path, default "../notes") - directory for the .html files,
+#                   resolved relative to this script; created if missing.
+#   -p/--pages-file (optional, path, default "../assets/pages.json") - short-name table,
+#                   resolved relative to this script; keys assume notes live at /notes/.
+#   -d/--debug      (optional, flag, default False) - print each written path to stderr.
+# output    : one <slug>.html per entry in POSTS plus the pages.json table; prints
+#             "wrote N notes" and "wrote M page names" to stdout.
 # return    : exit 0 on success, 1 on write failure, 2 on CLI or POSTS validation failure.
 # ref       : plan_md_files/index_plan.md
 # --------------------------
 
 import argparse
 import html
+import json
 import os
 import re
 import sys
+import unicodedata
 
 
 # ===== USER DEFAULTS: EDIT THESE VALUES =====
-DEFAULT_OUT_DIR = "../notes"   # Output dir for note pages, relative to this script
-DEFAULT_DEBUG   = False        # False = quiet; True = print written paths to stderr
+DEFAULT_OUT_DIR    = "../notes"              # Output dir for note pages, relative to this script
+DEFAULT_PAGES_FILE = "../assets/pages.json"  # Short page names for the owner report, relative to this script
+DEFAULT_DEBUG      = False                   # False = quiet; True = print written paths to stderr
 # ===========================================
 
 
-# Each post: slug, title, date (ISO), tags, a mini-markdown body, and the same
-# fields in Chinese under "zh" (title, dateline, tags, lede, body).
+SHORT_MAX = 24  # display columns (CJK counts 2); longer names get cut off in the owner report's narrow lists
+
+# Each post: slug, title, short (name in the owner report), date (ISO), tags, a mini-markdown
+# body, and the same fields in Chinese under "zh" (title, short, dateline, tags, lede, body).
 POSTS = [
     {
         "slug": "macro-placement-fast-repair",
         "title": "Macro placement: fast local repair beats raw wirelength",
+        "short": "Macro placement",
         "date": "2026-11-24",
         "dateline": "November 24, 2026",
         "tags": ["placement", "congestion", "legality"],
@@ -85,6 +96,7 @@ legality gate you never turn off.
 """,
         "zh": {
             "title": "宏单元摆放：快速局部修复比一味压线长更有效",
+            "short": "宏单元摆放",
             "dateline": "2026年11月24日",
             "tags": ["布局", "拥塞", "合法性"],
             "lede": "一次获胜的宏单元摆放方案让我学到的：多起点搜索、按拥塞排序，以及永远不能跳过合法性检查。",
@@ -116,6 +128,7 @@ legality gate you never turn off.
     {
         "slug": "structuring-eco-work",
         "title": "Structuring complex ECO work around three gates",
+        "short": "ECO gates",
         "date": "2026-11-22",
         "dateline": "November 22, 2026",
         "tags": ["ECO", "scripting", "workflow"],
@@ -161,6 +174,7 @@ batched at a few well-chosen checkpoints instead of smeared across everything.
 """,
         "zh": {
             "title": "复杂 ECO 工作的组织方式：只设三道关卡",
+            "short": "ECO 三道关卡",
             "dateline": "2026年11月22日",
             "tags": ["ECO", "脚本", "工作流"],
             "lede": "修复只交给一个执行者，审计交给只读的协作者，重量级评审只放在三道关卡上。",
@@ -192,6 +206,7 @@ batched at a few well-chosen checkpoints instead of smeared across everything.
     {
         "slug": "rtl2gds-timing-closed",
         "title": "RTL2GDS: synthesis is the easy half",
+        "short": "RTL2GDS pitfalls",
         "date": "2026-11-20",
         "dateline": "November 20, 2026",
         "tags": ["RTL2GDS", "signoff", "timing"],
@@ -233,6 +248,7 @@ and everything hard - happens between placement and signoff.
 """,
         "zh": {
             "title": "RTL2GDS：综合只是容易的那一半",
+            "short": "RTL2GDS 踩坑",
             "dateline": "2026年11月20日",
             "tags": ["RTL2GDS", "签核", "时序"],
             "lede": "真正让大多数流程栽跟头的，是最后拿出一份干净、时序收敛的 GDSII。",
@@ -397,13 +413,28 @@ PAGE = """<!doctype html>
 """
 
 
-ZH_FIELDS = ("title", "dateline", "tags", "lede", "body")
+ZH_FIELDS = ("title", "short", "dateline", "tags", "lede", "body")
 
 
 def check_posts(posts):
-    """Return [(slug, field)] for every Chinese field that is missing or empty."""
-    return [(post["slug"], field) for post in posts for field in ZH_FIELDS
-            if not post.get("zh", {}).get(field)]
+    """Return [(slug, problem)]: missing Chinese fields, missing or overlong short names."""
+    problems = [(post["slug"], "has no Chinese " + field) for post in posts for field in ZH_FIELDS
+                if not post.get("zh", {}).get(field)]
+    problems += [(post["slug"], "has no short name") for post in posts if not post.get("short")]
+    problems += [(post["slug"], "has a short name wider than {} columns: {}".format(SHORT_MAX, name))
+                 for post in posts for name in (post.get("short", ""), post.get("zh", {}).get("short", ""))
+                 if display_width(name) > SHORT_MAX]
+    return problems
+
+
+def display_width(text):
+    """Width in terminal-style columns: wide (CJK) characters count 2."""
+    return sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
+
+
+def page_names(posts):
+    """{path: [zh, en]}: the short name of every note, shown by the owner report instead of its path."""
+    return {"/notes/{}.html".format(post["slug"]): [post["zh"]["short"], post["short"]] for post in posts}
 
 
 def build_parser():
@@ -413,6 +444,8 @@ def build_parser():
     )
     parser.add_argument("-o", "--out-dir", default=DEFAULT_OUT_DIR,
                         help="output dir for .html files, relative to this script")
+    parser.add_argument("-p", "--pages-file", default=DEFAULT_PAGES_FILE,
+                        help="short page-name table (JSON), relative to this script")
     parser.add_argument("-d", "--debug", action="store_true", default=DEFAULT_DEBUG,
                         help="print each written path to stderr")
     return parser
@@ -436,8 +469,8 @@ def main(argv=None):
 
     missing = check_posts(POSTS)
     if missing:
-        for slug, field in missing:
-            print("[ERROR] main: post {} has no Chinese {}".format(slug, field), file=sys.stderr)
+        for slug, problem in missing:
+            print("[ERROR] main: post {} {}".format(slug, problem), file=sys.stderr)
         return 2
 
     written = 0
@@ -468,6 +501,16 @@ def main(argv=None):
             print("DEBUG wrote {}".format(path), file=sys.stderr)
 
     print("wrote {} notes to {}".format(written, target))
+
+    names, pages_path = page_names(POSTS), resolve_out_dir(args.pages_file)
+    try:
+        with open(pages_path, "w", encoding="utf-8") as handle:
+            json.dump(names, handle, ensure_ascii=False, indent=1)
+            handle.write("\n")
+    except OSError as error:
+        print("[ERROR] main: cannot write {}: {}".format(pages_path, error), file=sys.stderr)
+        return 1
+    print("wrote {} page names to {}".format(len(names), pages_path))
     return 0
 
 

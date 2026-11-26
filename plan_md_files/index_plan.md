@@ -219,3 +219,33 @@ the nav, and the "what is this / how to use it" explainer in one object.
   - 390px 宽度：轻点后卡片在屏幕内且保持显示，滚动后关闭。
   - 全程没有 CSP 违规。
 - 测试中发现并修复的 bug：卡片最初监听了捕获阶段的所有 scroll 事件，手机上轻点后浏览器自动把元素滚入视野，卡片立刻被关掉。现在只在页面本身滚动超过 24px 时关闭。
+
+## 9. 改进策略（访问来源改版 + 页面短名 + 接入 MBTI 小工具，2026-11-26）
+
+- 需求（用户原话归纳）：
+  1. 后台“访问来源”里每个按钮做成整行进度条看占比分布，框太大、突兀，要和整页更适配。
+  2. “页面”一栏有很长的名字（`/notes/macro-placement-fast-repair.html`），换行很难看，要重新命名。
+  3. 把另一个 GitHub 账号里的 MBTI 网页移植进个人网站，作为小工具，加一个入口点进去；以后用 nolanpix 账号推送，那个账号里的 MBTI 网页内容删除。
+- 设计（实测截图对照，见 §9.4）：
+  - 排行项改为“名称 + 次数一行，下面 3px 占比线”：无背景块、无边框、不换行（ellipsis），悬停时文字提亮、占比线升到全色。
+  - 占比口径从“相对第一名的条长”改为“占本期浏览/访客天的百分比”，悬停卡里的数字和线长一致（例如 6/14 = 42.9%）。
+  - 页面类标签用短名：`首页`、`宏单元摆放`。短名表由 `tools/gen_notes.py` 生成到 `assets/pages.json`（`{path: [zh, en]}`），Worker 读它，新增笔记不必重新部署 Worker；读不到时回退为 slug。
+  - 访问日志表的“页面”列与筛选条同样显示短名，完整路径放在悬停卡里（“路径”一行）。
+  - 首页“小工具”区：一张卡片链到 `mbti/`（相对链接，中英双语说明，标注页面本身是中文）。
+  - MBTI 页挂在 `/mbti/`：只发布生成物 `index.html`、`og.png`、`OFL-Anybody.txt`，源码与解锁码继续留在本地工作区（付费明文不进公开仓库）。
+- 实现：
+  - `assets/admin.css`：`.adm-rank` 改为两行 grid（名称/次数 + `::after` 占比线），`--share` 继续由客户端设置；新增 `:focus-visible` 轮廓，按压态用强调色。
+  - `worker/counter.js`：新增 `pageNames()`（2 秒超时、失败返回 `{}`、带 600 秒缓存提示）；`report()` 用 `Promise.all` 取名称；`dashboardClient()` 增加 `pageName()`/`shown()`，占比改为 `n/base`。
+  - `tools/gen_notes.py`：`-p/--pages-file`，生成 `assets/pages.json`；每篇文章新增 `short`（英）与 `zh.short`，校验缺失与显示宽度（CJK 记 2 列，上限 24）。
+  - `tools/tests/test_gen_notes.py`：正常生成、四种缺/超长短名的拒绝（退出码 2、不写文件）、宽度计算。
+  - `index.html` + `assets/style.css`：工具区从一段说明改为“卡片 + 待办说明”，网格 `minmax(0,360px) minmax(0,1fr)`，≤620px 单列。
+  - `mbti/`：构建命令 `python3 build_site.py -u https://nolanpix.github.io/mbti/`，随后复制三件生成物。
+- 兼容：新 `admin.css` 对当前已部署的旧 Worker 同样生效（同一 `.adm-rank` 结构与 `--share`），旧 Worker 下只是没有短名。
+- 验证：
+  - `/tmp/test_wksel/node/admin_e2e.mjs` 15 组通过（新增：占比=占本期浏览、短名/回退、筛选条与日志用短名、截图数字下每项单行 ≤32px、3px 线、无背景块、1280/390 × 深浅色无溢出）。
+  - `/tmp/test_wksel/node/mbti_site.mjs` 5 组通过（首页入口中英双语、点击进入、`og:url` 为新地址、旧地址不出现也不被请求、无跨域请求、390/320 无横向溢出、未解锁时详细解读不渲染且解锁面板写“付款入口还在准备中”）。
+  - `/tmp/test_wksel/node/i18n.mjs` 11 组通过；`python3 tools/tests/test_gen_notes.py` OK；MBTI 侧 `python3 tests/test_site.py` OK。
+- 未覆盖 / 待办：
+  - Worker 需要站长在 Cloudflare 控制台整体替换 `worker/counter.js` 并部署，短名与占比口径才线上生效（CSS 已生效）。
+  - MBTI 付费入口仍为空（等爱发电链接与客服邮箱）；`-r` 发布检查未通过，因此这次是按普通构建发布。
+  - 旧站（另一账号下的 `mbti-self-test` 仓库）的删除需要 `delete_repo` 权限，该账号令牌没有；Pages 已下线、仓库已转为私有。

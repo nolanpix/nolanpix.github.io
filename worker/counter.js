@@ -198,24 +198,34 @@ function reportOptions(u) {
   if (![7,30,90,365].includes(days) || !Number.isInteger(offset) || Math.abs(offset)>840) throw new Status(400,'Invalid report window or timezone offset.');
   return {days,offset};
 }
+// Short display names for report paths ("/notes/x.html" -> "宏单元摆放"), published by the site in
+// assets/pages.json (written by tools/gen_notes.py), so new pages need no Worker redeploy. Best effort.
+async function pageNames() {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 2000);
+  try {
+    const r = await fetch(SITE+'/assets/pages.json',{cf:{cacheTtl:600,cacheEverything:true},signal:ctl.signal});
+    const j = r.ok ? await r.json() : {};
+    return Object.fromEntries(Object.entries(j && typeof j === 'object' ? j : {}).filter(([p,v]) => cleanPath(p) === p && Array.isArray(v) && v.length === 2 && v.every(s => typeof s === 'string' && s.length > 0 && s.length <= 40)));
+  } catch { return {}; } finally { clearTimeout(timer); }
+}
 async function report(db, {days,offset}, now) {
   const today = Math.floor((now+offset*MIN)/DAY)*DAY-offset*MIN;
   const start = today-(days-1)*DAY, shift = offset*60, filter = ' FROM hits WHERE at BETWEEN ? AND ?';
   const grouped = `date(at/1000+?, 'unixepoch')`;
   const rankDefs = [['paths','path'],['entries','path',' AND first_visit=1'],['referrers','ref'],['countries','country'],['devices','device'],['browsers','browser'],['systems','os']];
-  const [perDay,heat,info,latest,...sets] = await db.batch([
+  const [[perDay,heat,info,latest,...sets],pages] = await Promise.all([db.batch([
     stmt(db,`SELECT ${grouped} day, count(*) views, count(DISTINCT vid) visitors${filter} GROUP BY day ORDER BY day`,shift,start,now),
     stmt(db,`SELECT cast(strftime('%w',at/1000+?,'unixepoch') AS INTEGER) weekday, cast(strftime('%H',at/1000+?,'unixepoch') AS INTEGER) hour, count(*) views${filter} GROUP BY weekday,hour`,shift,shift,start,now),
     stmt(db,"SELECT (SELECT coalesce(SUM(pv),0) FROM page_totals) lifetimeViews, (SELECT v FROM meta WHERE k='tracked_since') trackedSince, (SELECT count(*) FROM hits WHERE at>=? AND at<?) previousViews",start-days*DAY,start),
     stmt(db,'SELECT at,path,ref,country,device,browser,os,first_visit'+filter+' ORDER BY at DESC,id DESC LIMIT 50',start,now),
     ...rankDefs.map(([,col,extra='']) => stmt(db,`SELECT ${col} label,count(*) n${filter}${extra} GROUP BY ${col} ORDER BY n DESC,label LIMIT 10`,start,now))
-  ]);
+  ]),pageNames()]);
   const infoRow = info.results[0], trackedSince = Number(infoRow.trackedSince), byDay = new Map(perDay.results.map(r=>[r.day,r]));
   const trend = Array.from({length:days}, (_,i) => { const day = iso(start+offset*MIN+i*DAY); return byDay.get(day) || {day,views:0,visitors:0}; });
   const last = trend.at(-1), ranks = Object.fromEntries(rankDefs.map(([key],i)=>[key,sets[i].results]));
   return {ok:true,days,offset,updated:now,trackedSince,lifetimeViews:infoRow.lifetimeViews,
     totals:{views:trend.reduce((n,d)=>n+d.views,0),visitorDays:trend.reduce((n,d)=>n+d.visitors,0),previousViews:start-days*DAY >= Math.max(trackedSince,now-RETAIN*DAY) ? infoRow.previousViews : null,todayViews:last.views,todayVisitors:last.visitors},
-    trend,hours:heat.results,ranks,events:latest.results};
+    trend,hours:heat.results,ranks,events:latest.results,pages};
 }
 
 function adminHeaders(type = 'text/html; charset=utf-8') {
@@ -507,13 +517,16 @@ function dashboardClient() {
     card.addEventListener('pointerenter',open);card.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});card.addEventListener('pointerdown',open);card.addEventListener('focus',open);card.addEventListener('blur',clear);});
 
   const RANK={paths:['页面','Page',e=>e.path],entries:['入口页','Entry page',e=>e.first_visit?e.path:null],referrers:['来源域名','Referrer',e=>e.ref],countries:['国家/地区','Country',e=>e.country],devices:['设备','Device',e=>e.device],browsers:['浏览器','Browser',e=>e.browser],systems:['操作系统','OS',e=>e.os]};
+  const isPage=k=>k==='paths'||k==='entries';
+  function pageName(d,p){const v=d.pages&&d.pages[p];if(v)return zh()?v[0]:v[1];if(p==='/')return t('首页','Home');const m=/^\/notes\/([^/]+)\.html$/.exec(p);return m?m[1]:p;}
+  const shown=(d,k,label)=>isPage(k)?pageName(d,label):label;
   function renderRanks(d){for(const [k,list] of Object.entries(d.ranks)){const ol=$('rank-'+k);if(!ol||!RANK[k])continue;
-    const top=Math.max(1,...list.map(r=>r.n)),base=k==='entries'?d.totals.visitorDays:d.totals.views;
+    const base=k==='entries'?d.totals.visitorDays:d.totals.views;
     const items=list.map((r,i)=>{const li=make('li'),b=make('button');b.type='button';b.className='adm-rank';b.setAttribute('aria-controls','event-log');
-      const on=!!filter&&filter.key===k&&filter.label===r.label;b.setAttribute('aria-pressed',String(on));b.style.setProperty('--share',(100*r.n/top).toFixed(1)+'%');
-      b.append(make('span',r.label),make('b',num(r.n)));
+      const on=!!filter&&filter.key===k&&filter.label===r.label;b.setAttribute('aria-pressed',String(on));b.style.setProperty('--share',(base?Math.min(100,100*r.n/base):0).toFixed(1)+'%');
+      const name=shown(d,k,r.label);b.append(make('span',name),make('b',num(r.n)));
       const clear=()=>hideTip(b),open=e=>{const rect=b.getBoundingClientRect(),X=e&&e.clientX!=null?e.clientX:rect.left,Y=e&&e.clientY!=null?e.clientY:rect.bottom-10;
-        showTip(b,clear,r.label,[[t(k==='entries'?'首访进入':'浏览',k==='entries'?'Landings':'Views'),num(r.n)],[t(k==='entries'?'占当日首访':'占本期浏览',k==='entries'?'Share of landings':'Share of window'),pct(r.n,base)],[t('排名','Rank'),t(`第 ${i+1} / ${list.length}`,`#${i+1} of ${list.length}`)]],[on?t('再次点击取消筛选','Click again to clear the filter'):t('点击后在下方访问日志中筛选','Click to filter the visit log below')],X,Y);};
+        showTip(b,clear,name,[[t(k==='entries'?'首访进入':'浏览',k==='entries'?'Landings':'Views'),num(r.n)],[t(k==='entries'?'占当日首访':'占本期浏览',k==='entries'?'Share of landings':'Share of window'),pct(r.n,base)],[t('排名','Rank'),t(`第 ${i+1} / ${list.length}`,`#${i+1} of ${list.length}`)],...(isPage(k)?[[t('路径','Path'),r.label]]:[])],[on?t('再次点击取消筛选','Click again to clear the filter'):t('点击后在下方访问日志中筛选','Click to filter the visit log below')],X,Y);};
       b.addEventListener('pointerenter',open);b.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')clear();});b.addEventListener('focus',()=>open());b.addEventListener('blur',clear);
       b.addEventListener('click',()=>{filter=on?null:{key:k,label:r.label};hideTip();renderRanks(d);renderEvents(d);if(!on&&b.isConnected)b.focus();else{const again=[...document.querySelectorAll('.adm-rank')].find(x=>x.textContent===b.textContent);again?.focus();}});
       li.append(b);return li;});
@@ -522,8 +535,8 @@ function dashboardClient() {
     const rows=filter?d.events.filter(e=>match(e)===filter.label):d.events,parts=[];
     if(filter){const bar=make('p');bar.className='adm-filter';const clear=make('button',t('清除筛选','Clear filter'));clear.type='button';clear.className='adm-plain';
       clear.addEventListener('click',()=>{filter=null;renderRanks(d);renderEvents(d);});
-      bar.append(make('span',t(`筛选：${RANK[filter.key][0]} = ${filter.label} · 最近 ${d.events.length} 条中有 ${rows.length} 条`,`Filter: ${RANK[filter.key][1]} = ${filter.label} · ${rows.length} of the latest ${d.events.length}`)),clear);parts.push(bar);}
-    parts.push(rows.length?table(t('最近访问','Recent visits'),t(['时间','页面','来源','国家/地区','设备 / 浏览器 / 系统','今日首访'],['Time','Page','Source','Country','Device / browser / OS','First today']),rows.map(e=>[time(e.at,d.offset),e.path,e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?t('是','Yes'):'—'])):make('p',filter?t('最近的访问中没有符合筛选的记录。','No recent visits match this filter.'):t('这个时间范围内没有访问记录。','No visits recorded in this window.')));
+      bar.append(make('span',t(`筛选：${RANK[filter.key][0]} = ${shown(d,filter.key,filter.label)} · 最近 ${d.events.length} 条中有 ${rows.length} 条`,`Filter: ${RANK[filter.key][1]} = ${shown(d,filter.key,filter.label)} · ${rows.length} of the latest ${d.events.length}`)),clear);parts.push(bar);}
+    parts.push(rows.length?table(t('最近访问','Recent visits'),t(['时间','页面','来源','国家/地区','设备 / 浏览器 / 系统','今日首访'],['Time','Page','Source','Country','Device / browser / OS','First today']),rows.map(e=>[time(e.at,d.offset),pageName(d,e.path),e.ref,e.country,[e.device,e.browser,e.os].join(' / '),e.first_visit?t('是','Yes'):'—'])):make('p',filter?t('最近的访问中没有符合筛选的记录。','No recent visits match this filter.'):t('这个时间范围内没有访问记录。','No visits recorded in this window.')));
     box.replaceChildren(...parts);}
 
   function render(d){if(active)active.clear();lastData=d;const tt=d.totals;for(const [id,value] of Object.entries({views:num(tt.views),visitorDays:num(tt.visitorDays),average:tt.visitorDays?(tt.views/tt.visitorDays).toFixed(1):'—',today:num(tt.todayViews)+' / '+num(tt.todayVisitors)}))$('v-'+id).textContent=value;

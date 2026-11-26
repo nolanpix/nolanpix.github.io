@@ -36,3 +36,9 @@
 后台页默认显示中文，右上角有语言和主题两个按钮，选择保存在本 Worker 域名的 localStorage（`npa:lang` / `npa:theme`），与博客的设置互不影响。
 按钮脚本由 Worker 自己在 `/admin/prefs.js` 提供，以满足 CSP `script-src 'self'`，不需要新增任何绑定或密钥。
 改动只在 `worker/counter.js`：在 Cloudflare 控制台用新代码整体替换并部署即可，原有配置（D1、密钥、密码哈希）不变。
+
+## 报表的页面短名（2026-11-26）
+
+报表接口会顺带取一次 `https://nolanpix.github.io/assets/pages.json`（2 秒超时），把 `/notes/x.html`
+显示成短名；取不到时退回文件名。`pages.json` 由 `tools/gen_notes.py` 生成并随 Pages 发布，
+所以新增笔记不需要重新部署 Worker。该请求失败只影响显示，报表本身照常返回。
