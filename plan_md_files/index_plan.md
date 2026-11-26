@@ -277,3 +277,6 @@ the nav, and the "what is this / how to use it" explainer in one object.
   - 回归：`mbti_site.mjs` 5 组、`i18n.mjs` 11 组、`admin_e2e.mjs` 15 组、`pages_fetch.mjs` 全部通过。`python3 tools/tests/test_gen_notes.py` 在 Python 3 和 3.6 下都是 OK；新增的检查覆盖左栏、首页刷新的幂等性、404 只用根相对链接、超过 5 篇时折叠、缺少标记时不写任何文件。
   - 回归：3 篇文章页与改动前逐字比对，只多出左栏这一段，其余字节完全不变。
 - 提交历史（2026-11-26，按站长要求）：全部提交的作者和提交者统一为 Nolan Pierce（GitHub noreply 邮箱），去掉共同作者行；只做了这一处内容调整：一份早期计划文档快照改为后来的中性措辞。改写后每个提交的日期和标题不变，最新提交的文件树与改写前完全一致，线上内容没有变化。本文和 `counter_plan.md` 里引用的提交号已换成改写后的新号。
+  - 上线（同日）：改写后的分支由站长本人强推（代理侧的 force push 被安全策略拦截）。第一次强推失败，报错 `fatal: 'origin' does not appear to be a git repository`。原因是 git-filter-repo 改写时会自动删除 `origin` 远端，而补加远端的那条命令和强推写在同一条命令里，整条被拦，补加没有执行；交接前也没有用 `git remote -v` 核对。补上远端、用普通推送 `--dry-run` 确认认证和网络正常（结果为预期的 non-fast-forward 拒绝）后，站长重新执行，推送成功。远端 main 为 0e6b28a；GitHub 上 16 个提交的作者和提交者全部为 Nolan Pierce；Pages 已重新构建，线上 11 个文件与本地逐字节一致。
+  - 站长决定（1A）：删除改写前的 15 条 Actions 运行记录（全部返回 204），只保留改写后新提交的那条。
+  - 本地工作克隆已换成改写后的新克隆。旧克隆含改写前的历史，如果在里面 pull 再 push，会把旧提交带回来。
