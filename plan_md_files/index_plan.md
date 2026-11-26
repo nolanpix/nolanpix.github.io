@@ -367,3 +367,23 @@ the nav, and the "what is this / how to use it" explainer in one object.
   - `/tmp/test_wksel/node/theme_transitions.mjs` 4 组：首页 → 文章 → 首页 → 404 → 长文、首页 → MBTI、MBTI 切深色 → 主站 → 文章 → 404 → MBTI、四类页面刷新；每一步 `data-theme` 在 `<body>` 前正确且不跳变，404 的后台入口随主题带参数。
   - 回归：`i18n.mjs` 11 组、`mbti_site.mjs` 5 组、`test_gen_notes.py` OK。
 - 上线：主站随 Pages；Worker 仍需站长手动部署，部署后后台 → 主站的色调回传才生效。
+
+## 16. 改进策略（语言也随所有跳转保持一致，2026-11-27）
+
+- 需求（用户原话）：语言和色调一样，不管从哪个页面设置语言，跳到哪个页面都必须统一，不能突然变化；统一检查。
+- 检查结果（改前）：
+  - 主站内部（首页 / 文章 / 404）共用 `np:lang`，head 同步执行 → 正常。
+  - 主站 → 后台：入口链接只带主题，后台读不到 `np:lang`，按自己的 `npa:lang` 或默认中文 → **可能跳变，本次修复**。
+  - 后台内部（登录 / 密码 / 报表 / 退出）：`npa:lang` → 正常。
+  - 后台 → 主站：返回链接只带主题，主站按自己的 `np:lang` → **跳变，本次修复**。
+  - MBTI 自测页没有语言切换、正文只有中文：不属于语言设置的持久化范围；从英文站点进入仍是中文，需单独立项做整页翻译。
+- 修复：
+  - 主站 `prefs.js`：`incomingTheme()` 升级为 `incomingPrefs()`，一次读取并应用 `?theme=` 与 `?lang=`，写入 `np:theme` / `np:lang` 后把两个参数一起从地址栏移除；`syncAdminLinks()` 给后台入口同时写 `theme` 与 `lang`，主题/语言按钮、系统主题、跨标签页变化都会刷新链接。
+  - 后台 `adminPrefs`：读取并保存 `?theme=` / `?lang=`，`syncSiteLinks()` 给返回链接同时写两个参数；缓存戳升到 `prefs.js?v=4`。
+  - 两端优先级仍是“URL 参数 → 已存偏好 → 默认（主题再跟系统）”，首屏在 `<body>` 前生效。
+- 边界：浏览器自带“后退”跨源无法同步（同 §15），请用页面内链接。MBTI 页无语言开关且为中文单语，翻译是独立任务。
+- 验证（均通过）：
+  - `/tmp/test_wksel/node/admin_e2e.mjs` 19 组：入口与返回链接同时带 `theme&lang`；主站中文 → 后台中文 → 后台切英文 → 返回主站英文，`np:lang=en`；`?theme=&lang=` 同时生效并清洗；报表品牌链接带两者；退出登录后链接仍带两者。
+  - `/tmp/test_wksel/node/theme_transitions.mjs` 4 组：主站切浅色 + 英文后首页 → 文章 → 首页 → 404 → 长文、MBTI 往返、刷新，语言与色调均不跳变；404 的后台入口带 `theme&lang`。
+  - 回归：`i18n.mjs` 11 组、`mbti_site.mjs` 5 组、`test_gen_notes.py` OK。
+- 上线：主站随 Pages；Worker 仍需站长手动部署，部署后主站 ↔ 后台的语言回传才生效。

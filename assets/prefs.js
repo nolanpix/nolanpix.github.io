@@ -36,19 +36,25 @@
     var t = load("np:theme");
     return t === "light" || t === "dark" ? t : null;
   }
-  // The admin hands its tone back as ?theme=light|dark on "Back to blog".
-  // Adopt it, remember it, then drop it so a later switch is not undone by a stale URL.
-  function incomingTheme() {
-    var t = null;
-    try { t = new URLSearchParams(location.search).get("theme"); } catch (e) { return null; }
-    if (t !== "light" && t !== "dark") return null;
-    save("np:theme", t);
-    try {
-      var u = new URL(location.href);
-      u.searchParams.delete("theme");
-      history.replaceState(null, "", u.pathname + u.search + u.hash);
-    } catch (e) { /* file:// or old browser: the saved choice still applies */ }
-    return t;
+  // The admin hands its tone and language back as ?theme=light|dark&lang=zh|en on
+  // "Back to blog". Adopt both, remember them, then drop them so a later switch is
+  // not undone by a stale URL.
+  function incomingPrefs() {
+    var got = {}, q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return got; }
+    var t = q.get("theme");
+    if (t === "light" || t === "dark") { got.theme = t; save("np:theme", t); }
+    var l = q.get("lang");
+    if (l === "zh" || l === "en") { got.lang = l; save("np:lang", l); }
+    if (got.theme || got.lang) {
+      try {
+        var u = new URL(location.href);
+        u.searchParams.delete("theme");
+        u.searchParams.delete("lang");
+        history.replaceState(null, "", u.pathname + u.search + u.hash);
+      } catch (e) { /* file:// or old browser: the saved choice still applies */ }
+    }
+    return got;
   }
   function applyTheme(theme) {
     root.setAttribute("data-theme", theme);
@@ -59,23 +65,27 @@
     root.lang = lang === "en" ? "en" : "zh-CN";
     var enTitle = root.getAttribute("data-title-en");
     document.title = lang === "en" && enTitle ? enTitle : zhTitle;
+    syncAdminLinks();
   }
-  // The admin runs on the Worker origin and cannot read np:theme. Hand the tone over in
-  // the link; its page applies it and remembers it under npa:theme.
+  // The admin runs on the Worker origin and cannot read np:theme / np:lang. Hand both
+  // over in the link; its page applies them and remembers them under npa:*.
   function syncAdminLinks() {
     var theme = root.getAttribute("data-theme");
+    var lang = root.getAttribute("data-lang");
     each('a[href*="/admin"]', function (a) {
       try {
         var u = new URL(a.getAttribute("href"), location.href);
         if (u.origin === location.origin) return;
         u.searchParams.set("theme", theme);
+        u.searchParams.set("lang", lang);
         a.setAttribute("href", u.href);
       } catch (e) { /* keep the link as written */ }
     });
   }
 
-  applyTheme(incomingTheme() || savedTheme() || (system && system.matches ? "light" : "dark"));
-  applyLang(load("np:lang") === "en" ? "en" : "zh");
+  var incoming = incomingPrefs();
+  applyTheme(incoming.theme || savedTheme() || (system && system.matches ? "light" : "dark"));
+  applyLang(incoming.lang || (load("np:lang") === "en" ? "en" : "zh"));
 
   function refresh() {
     var lang = root.getAttribute("data-lang");
