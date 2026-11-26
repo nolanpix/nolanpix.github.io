@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN" data-lang="zh" data-title-en="One in a Billion, on the Staircase of Primes: After an AI Proved the Riemann Hypothesis, What Is Humanity Waiting For? - Nolan Pierce">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>素数台阶上的十亿分之一：AI 证明黎曼猜想之后，人类在等什么 - Nolan Pierce</title>
+<meta name="description" content="机器在 72 小时内确认了证明，人类却还要几年才读得懂。黎曼猜想到底在问什么，这份 Lean 证明解决了什么、没解决什么，以及为什么&quot;对&quot;和&quot;懂&quot;是两件事。">
+<meta property="og:title" content="素数台阶上的十亿分之一：AI 证明黎曼猜想之后，人类在等什么">
+<meta property="og:description" content="机器在 72 小时内确认了证明，人类却还要几年才读得懂。黎曼猜想到底在问什么，这份 Lean 证明解决了什么、没解决什么，以及为什么&quot;对&quot;和&quot;懂&quot;是两件事。">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/prefs.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="np">np.</span></a>
+    <nav class="navlinks">
+      <a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">notes</span></a>
+      <a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">repos</span></a>
+      <a href="../#tools"><span lang="zh-CN">工具</span><span lang="en">tools</span></a>
+      <a href="../#about"><span lang="zh-CN">关于</span><span lang="en">about</span></a>
+    </nav>
+    <div class="right">
+      <a href="https://github.com/nolanpix" rel="me">GitHub</a>
+      <a href="https://x.com/nolanpierce_lab" rel="me">X</a>
+      <a class="adm-entry" href="https://nolanpix-counter.song66666.workers.dev/admin" rel="nofollow" title="站长后台：仅管理员可进入" aria-label="站长后台：仅管理员可进入" data-aria-en="Owner dashboard: admins only"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="lbl"><span lang="zh-CN">后台 · 仅管理员</span><span lang="en">Admin · owner only</span></span></a>
+      <button class="pref" type="button" data-pref="lang"><span lang="zh-CN">EN</span><span lang="en">中文</span></button>
+      <button class="pref" type="button" data-pref="theme"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<nav class="rail" aria-label="全站目录" data-aria-en="Site contents">
+  <ul>
+    <li><a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">Notes</span></a>
+      <ul>
+        <li><details class="rail-cat"><summary><span lang="zh-CN">数字后端</span><span lang="en">Digital backend</span><span class="n">3</span></summary><ul><li><a href="macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li><li><a href="structuring-eco-work.html"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li><li><a href="rtl2gds-timing-closed.html"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li></ul></details></li>
+        <li><details class="rail-cat" open><summary><span lang="zh-CN">数学与科学</span><span lang="en">Math &amp; science</span><span class="n">1</span></summary><ul><li><a href="riemann-hypothesis-ai-proof.html" aria-current="page"><span lang="zh-CN">黎曼猜想与 AI 证明</span><span lang="en">Riemann &amp; AI proof</span></a></li></ul></details></li>
+      </ul>
+    </li>
+    <li><a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">Repos</span></a></li>
+    <li><a href="../#tools"><span lang="zh-CN">小工具</span><span lang="en">Tools</span></a>
+      <ul>
+        <li><a href="../mbti/"><span lang="zh-CN">MBTI 自测</span><span lang="en">MBTI test</span></a></li>
+      </ul>
+    </li>
+    <li><a href="../#about"><span lang="zh-CN">关于</span><span lang="en">About</span></a></li>
+  </ul>
+</nav>
+
+<main class="wrap">
+  <article class="post">
+    <a class="back" href="../#cat-math"><span lang="zh-CN">&larr; 数学与科学</span><span lang="en">&larr; Math &amp; science</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月26日 &nbsp;&middot;&nbsp; <a href="../#cat-math">数学与科学</a> &nbsp;&middot;&nbsp; 数学 &middot; 黎曼猜想 &middot; AI &middot; Lean</span><span lang="en">November 26, 2026 &nbsp;&middot;&nbsp; <a href="../#cat-math">Math &amp; science</a> &nbsp;&middot;&nbsp; math &middot; Riemann &middot; AI &middot; Lean</span></p>
+    <h1><span lang="zh-CN">素数台阶上的十亿分之一：AI 证明黎曼猜想之后，人类在等什么</span><span lang="en">One in a Billion, on the Staircase of Primes: After an AI Proved the Riemann Hypothesis, What Is Humanity Waiting For?</span></h1>
+    <div class="p-body" lang="zh-CN">
+<blockquote>2026 年 11 月 20 日，一位数学家说他和 Claude 一起证明了黎曼猜想。 一天之内，机器确认了这份证明；三天之内，人类数学界吵翻了天。 这篇文章讲清楚三件事：黎曼猜想到底在问什么、这次&quot;证明&quot;意味着什么、 以及为什么&quot;机器说对了&quot;和&quot;人类弄懂了&quot;是两件事。</blockquote>
+<p><em>阅读时间约 15 分钟。文中每个数字我都在自己的电脑上重新算过，脚本见文末。</em></p>
+<hr>
+<h2>一、一条推送引爆的周末</h2>
+<p>事情是从一条很短的推特开始的。</p>
+<p>2026 年 11 月 20 日上午，巴黎索邦大学的数学物理学家 Scott Armstrong 发了一条只有几个字的推文：&quot;@__alpoge__ ftw&quot;，配上一张还没发表的论文截图。这篇四页纸的说明，来自 Anthropic 公司的数学家 Levent Alpöge，发在他自己的个人网站上。开头一句话写着：</p>
+<blockquote>&quot;我相信，我和 Claude 一起，发现了黎曼猜想的一个证明。&quot;</blockquote>
+<p>黎曼猜想是什么分量？数学家 Brian Conrey 的评价是：&quot;这是人类历史上一个纪念碑式的时刻，我认为这是数学史上发生过的最大的事。&quot; 它从 1859 年被提出，困扰了数学界 167 年，是希尔伯特 1900 年那份著名问题清单上的第八题，也是克雷数学研究所悬赏一百万美元的七大千禧年难题之一——此前七道题里只有庞加莱猜想被解决。</p>
+<p>这次公布的方式却极不寻常。没有投稿期刊，没有一篇人类能读的论文，直接甩出来的是约 <strong>1700 万行</strong> Lean 代码（更精确地说，1737 万行，压缩成 14 个分卷）。Lean 是一种&quot;证明助手&quot;：你把每一步推理用它的语言写下来，计算机会逐条检查有没有逻辑漏洞。</p>
+<p>消息传出，数学界和 AI 圈同时炸锅。而真正让这件事和过去那些&quot;AI 解出某道题&quot;的新闻不一样的，是接下来 72 小时里发生的事：机器很快说&quot;对&quot;，人类却迟迟说不出&quot;为什么&quot;。</p>
+<hr>
+<h2>二、先把主角请出来：黎曼猜想到底在问什么</h2>
+<p>要看懂这场争论，得先知道黎曼猜想在说什么。我尽量不用公式。</p>
+<h3>素数是数字世界的原子</h3>
+<p>素数就是只能被 1 和自己整除的数：2、3、5、7、11、13……它们是整数的&quot;原子&quot;，任何整数都能唯一地拆成素数的乘积。可它们在数轴上的分布看起来毫无规律：有时挤在一起（11、13 是一对孪生素数），有时隔很远。</p>
+<p>两千多年来，数学家最想回答的问题是：<strong>到某个数 x 为止，一共有多少个素数？</strong> 这个计数记作 π(x)。小范围可以数：100 以内有 25 个素数。但当 x 很大时，就得靠公式。</p>
+<p>15 岁的高斯猜了一个惊人准确的近似：x 以内的素数个数大约是&quot;对数积分&quot; li(x)。这个近似好到什么程度？我在自己机器上用筛法数了真实的素数个数，和 li(x) 对比：</p>
+<div class="table-wrap"><table>
+<thead><tr><th>x</th><th>真实 π(x)</th><th>高斯的 li(x)</th><th>两者之差</th></tr></thead>
+<tbody>
+<tr><td>1,000</td><td>168</td><td>176.6</td><td>8.6</td></tr><tr><td>10,000</td><td>1,229</td><td>1,245.1</td><td>16.1</td></tr><tr><td>100,000</td><td>9,592</td><td>9,628.8</td><td>36.8</td></tr><tr><td>1,000,000</td><td>78,498</td><td>78,626.5</td><td>128.5</td></tr>
+</tbody>
+</table></div>
+<p>注意最后一列：x 涨了一千倍，误差才从 8.6 涨到 128.5。高斯的曲线像一条紧贴地面滑行的飞机，始终贴着真实的素数台阶。</p>
+<h3>关键问题：误差能有多大？</h3>
+<p>高斯的 li(x) 是光滑曲线，真实的 π(x) 是锯齿状的台阶——每遇到一个素数就跳一级。问题在于：<strong>这两者的差距，最大能有多大？</strong></p>
+<p>黎曼猜想，用最朴素的话说，就是在断言这个差距<strong>被牢牢控制住了</strong>：它的量级不会超过大约 √x 这个尺度。换句话说，素数虽然看起来随机，但它们的随机性是&quot;最老实的那种随机&quot;——像抛硬币一样，偏差永远压在统计学允许的范围内，不会突然暴走。</p>
+<p>斯坦福的 Steven Strogatz 把黎曼猜想称作数学界的《白鲸记》——那头游荡了一百多年、谁也抓不到的深海巨兽。它之所以重要，是因为数论里有成百上千条定理、密码学里有一大批加密算法，都建立在&quot;假设黎曼猜想成立&quot;的前提上。一旦它被证明，这些结论会一夜之间从&quot;大概对&quot;变成&quot;确定对&quot;。</p>
+<hr>
+<h2>三、把一万道波叠起来，为什么能看见素数</h2>
+<p>有一个绝妙的比喻可以一下子抓住黎曼猜想的内核：<strong>把一万道波叠起来，就能看见素数。</strong> 这不是文学修辞，它对应着数学里一个真实、精确、我亲手验证过的公式。</p>
+<h3>零点就是&quot;波&quot;</h3>
+<p>黎曼研究的是一个叫 ζ（zeta）的函数。这个函数在某些点上取值为零，这些点叫&quot;零点&quot;。其中一批&quot;平凡零点&quot;在负偶数上，没意思；真正要命的是那些&quot;非平凡零点&quot;。</p>
+<p>黎曼发现了一件深刻的事：<strong>每一个非平凡零点，都对应着一道波。</strong> 把所有这些波叠加起来，就能精确地重建出素数的分布。一个零点，一道正弦波；它的位置决定这道波的&quot;音高&quot;和&quot;涨势&quot;。叠的波越多，重建出来的曲线就越贴近真实的素数台阶。换句话说：第一道波响一声，第二道波音高了一点，叠到一万道，原本光滑的曲线就在 2、3、5、7、11 这些地方长出了一级级台阶——说的正是这件事。</p>
+<h3>我把这件事算了一遍</h3>
+<p>为了确认这个说法不是夸张，我在自己电脑上做了个实验：取前 50 个真实的 ζ 零点，用显式公式（主项减去每个零点贡献的波）去重建素数的计数函数 ψ(x)，再和筛法算出的真实值比。结果（窗口取 x 在 10000 附近的 300 个整数）：</p>
+<div class="table-wrap"><table>
+<thead><tr><th>用了几个零点</th><th>平均误差</th><th>最大误差</th></tr></thead>
+<tbody>
+<tr><td>0 个（只有主项 x）</td><td>23.6</td><td>47.8</td></tr><tr><td>10 个零点</td><td>14.1</td><td>31.3</td></tr><tr><td>25 个零点</td><td>12.3</td><td>28.4</td></tr>
+</tbody>
+</table></div>
+<p>波越叠越多，光滑的主项一点点长出了台阶的形状，平均误差一路下降（最大误差因为台阶跳变处的&quot;吉布斯振铃&quot;下降得慢一些，这是用有限个波去逼近一个突变本就会有的现象）。另外我还验证了一件更漂亮的事：ψ(x) 在每个素数处跳起的高度，正好等于那个素数的对数——比如在 10007（一个素数）处，台阶跳高 9.2110，而 log(10007) = 9.2110，分毫不差。<strong>台阶的位置，就是素数本身。</strong></p>
+<h3>黎曼猜想 = 所有的波都&quot;同样响&quot;</h3>
+<p>现在可以把黎曼猜想翻译成这幅图景了。每道波的&quot;响度&quot;（振幅）由它对应零点的位置决定。如果某个零点偏离了那条特殊的&quot;临界线&quot;（实部等于 1/2 的竖线），对应的那道波就会越叠越响，最终把素数台阶搅得面目全非，误差就会暴走。</p>
+<p><strong>黎曼猜想说的是：所有非平凡零点都老老实实待在这条临界线上，所以所有的波都&quot;同样响&quot;，没有哪一道会失控。</strong> 如果把决定这些波的数——也就是这些零点——编成一声钟，那么听到那声钟，你就算见过黎曼猜想的主角了。</p>
+<p>人类已经用计算机验证过超过 <strong>12 万亿个</strong>零点，个个都在线上。但&quot;检查过 12 万亿个&quot;和&quot;证明全部无穷多个都在线上&quot;之间，隔着一道深渊——哪怕只有一个反例，整座大厦就塌了。这正是 Alpöge 和 Claude 声称跨过的那道深渊。</p>
+<hr>
+<h2>四、那 72 小时：机器说&quot;对&quot;，人类还在&quot;啊？&quot;</h2>
+<p>回到 11 月 20 日。推文发出后，全世界的 Lean 专家开始连夜赛跑，要独立验证这 1700 万行代码。</p>
+<h3>为什么&quot;编译通过&quot;还不够</h3>
+<p>Lean 验证一份证明，第一步是&quot;编译通过&quot;——确认代码里没有显而易见的逻辑谬误。MIT 的数论学家 Andrew Sutherland 第一个跑通了，用时不到中午。但编译通过只说明&quot;步骤没错&quot;，还有两个更刁钻的问题：</p>
+<ol>
+<li><strong>代码里写下的定理，真的是黎曼猜想本身吗？</strong> 帝国理工的 Kevin Buzzard 在 11 月 12 日就列出过判断标准：代码原则上可以悄悄改掉某个符号的含义，用&quot;黎曼猜想等于黎曼猜想&quot;骗过机器。要排除这点，得跑一次&quot;比对&quot;（comparator run）——社区专门另写一个只导入标准数学库 Mathlib 的文件，把黎曼猜想原样重写一遍，再和 Alpöge 证出的定理逐条比对。</li>
+<li><strong>会不会是钻了 Lean 自身的漏洞？</strong> Lean 的内核历史上出过能&quot;证明 0=1&quot;的 bug。为此要用多个独立实现的检查器去验证。</li>
+</ol>
+<h3>社区的联合认证</h3>
+<p>11 月 21 日，Lean FRO 与 Mathlib Initiative 发布联合声明，给出了明确结论：</p>
+<blockquote>&quot;我们完全相信 Alpöge 的黎曼猜想证明是正确的，并对这一成就表示祝贺。&quot;</blockquote>
+<p>声明列了四条标准并逐条确认满足：陈述正确（取自 Mathlib 已审核的定义）、代码可编译（数十人复现出同一份导出文件）、证的是正确的命题（comparator 与 con-leche 两套独立工具比对一致）、证明有效（Lean 官方内核、独立的 Rust 内核 nanoda、附带形式化正确性证明的 con-leche 与 con-ron 都接受）。</p>
+<p>Sutherland 的核验页记录了这场核验的恐怖体量：全库 <strong>175,187 个模块</strong>零错误编译，导出的证明文件 <strong>615 亿字节</strong>（约 61.5 GB）；Lean 偏执模式内核在单线程上跑了 <strong>72 小时 20 分</strong>才把整份证明验完。最后一行写着那句让人安心的话：<strong>&quot;Your solution is okay!&quot;</strong></p>
+<p>斯坦福的邓煜（2026 年菲尔兹奖得主）提醒这背后的分界：这是&quot;机器核验通过&quot;，不是&quot;数学界已经接受&quot;。但正如正在深圳参加黎曼诞辰 200 周年学术研讨会的丘成桐（也是菲尔兹奖得主）所说，机器分步拆解、逐条核验的标准，&quot;甚至高于许多物理重大发现的实验验证标准&quot;，没必要过度质疑可信度——用他的话说，<strong>&quot;数学进入了一个新纪元。&quot;</strong></p>
+<hr>
+<h2>五、&quot;25 万页&quot;的笑话，和一个真实的尴尬</h2>
+<p>这次事件里最出圈的一个数字，是&quot;25 万页&quot;。它来自 Alpöge 四页说明里的一个脚注：他说自己让 Claude 把证明写成人类能读的文字，结果&quot;写到了 25 万页以上&quot;，他把这本书戏称为&quot;GRH……书&quot;。</p>
+<p>这个数字传疯了。有媒体直接把标题做成&quot;25 万页的废话&quot;（slop）。11 月 23 日，Alpöge 在 X 上发了一条题为&quot;我干的蠢事&quot;的帖子澄清：</p>
+<blockquote>&quot;25 万页以上是个玩笑！我觉得大数字特别搞笑。&quot;</blockquote>
+<p>但他同时强调，页数虽是玩笑，<strong>那份又臭又长的文稿是真实存在的</strong>，只是他觉得贴出来&quot;是一场巨大而不可读的&#x27;废话&#x27;灾难&quot;，所以只放了 Lean 代码。他也坦承自己的 Lean 代码&quot;显然塞满了垃圾，但能编译&quot;，&quot;所有对这些垃圾的批评都完全合理，我接受&quot;。</p>
+<p>玩笑归玩笑，这个数字戳中了一个真实的尴尬：<strong>一份被机器确认百分百正确的证明，至今没有一个人能完整读懂它。</strong> 牛津大学的 Jon Keating 说：&quot;我不理解，我怀疑没有任何人完全理解。当我看着它，我完全处在一种敬畏和惊奇之中。&quot;</p>
+<p>加拿大数学家 Daniel Litt 把这个怪异的处境总结得最精准：</p>
+<blockquote>&quot;(1) 这份 Lean 形式化的黎曼猜想证明极大概率是正确的。(2) 还没有任何人类理解它。&quot;</blockquote>
+<hr>
+<h2>六、争议：机器能保证&quot;没错&quot;，但保证不了&quot;是正道&quot;</h2>
+<p>就在大家以为尘埃落定时，11 月 22 日出现了反转。学者 J. L. Nielsen 发布了一篇质疑论文，标题直指《Alpöge 黎曼猜想证明的无效性》，并在 31 小时内连更 14 版。</p>
+<p>她的靶心是代码深处一个叫 <code>anyGeometry</code> 的几何谓词——它被直接写成&quot;无论输入什么都返回真&quot;（恒真）。按她的统计，这个恒真定义在 24 个文件中出现、被调用 118 次。她据此判断：这套庞大代码验证到的只是一个同义反复的空壳，用&quot;黎曼猜想等于黎曼猜想&quot;完成了一次逻辑闭环。</p>
+<p>这场争议恰恰点出了 Lean 这类工具的<strong>根本局限</strong>：</p>
+<ul>
+<li>机器能保证<strong>逻辑自洽</strong>——从你写下的定义和公理出发，每一步推理都严丝合缝。</li>
+<li>但机器<strong>无法判断你写下的定义是否忠实于它声称的数学含义</strong>。这是&quot;名&quot;与&quot;实&quot;之辨，机器管不了。</li>
+</ul>
+<p>不过，Nielsen 的质疑有个关键缺口。社区的核验走的是<strong>另一条路</strong>：既然顶层命题已被两套独立工具确认为 Mathlib 里标准的黎曼猜想，而独立内核又接受了一个完整、无额外公理的证明项，那么中间某段代码即便写成了恒真，也只能说明那段代码&quot;挂羊头卖狗肉&quot;、没干它名字声称的活，<strong>并不足以直接推翻顶层结论</strong>。何况 Nielsen 自己也承认，她实际只读了约 70 个文件，面对的却是 175,187 个模块的庞然大物。</p>
+<p>截至目前，黎曼猜想既没有&quot;被证伪&quot;（克雷官网仍把它列在&quot;未解决&quot;栏），这篇质疑也没有被权威第三方一锤定音。但它把一个新问题摆上了台面：<strong>当机器越来越擅长在浩如烟海的代码里找逻辑捷径，人类该如何确保它走的是名副其实的正道？</strong></p>
+<hr>
+<h2>七、不是孤例：谁来署名，一百万美元归谁</h2>
+<p>把镜头拉远，这件事不是突然砸下来的。</p>
+<ul>
+<li>今年 8 月，Anthropic 就宣布一个未发布的 Claude 模型把&quot;落在临界线上的零点比例&quot;这一经典下界从 41.6% 推进到了 67.2%，用了 60 个子智能体、3100 万输出 token。当时他们还说&quot;不指望这些技术能证明黎曼猜想本身&quot;。</li>
+<li>11 月 23 日，Anthropic 和 OpenAI 又先后给出了复杂度理论中 VP≠VNP（1979 年的 Valiant 猜想）的证明，都附带 Lean 形式化。</li>
+</ul>
+<p>AI 正把整个数学界当成练兵场。于是两个老问题被逼到了台前。</p>
+<p><strong>署名问题。</strong> OpenAI 从今年 5 月起，论文一律只署公司名&quot;OpenAI&quot;，不挂任何人类作者；Anthropic 则选择把 Claude 列为作者；只有 Google DeepMind 还守着传统。今年 6 月发布、已有数千名数学家签署的《莱顿宣言》给出了社区共识：<strong>信誉与责任仍应属于人类</strong>，AI 可以参与，但不能替代一个结果背后的集体人类劳动。新的预印本平台 Hexagon 甚至强制要求投稿者声明&quot;这篇文章有多少是 AI 写的、贡献者本人理解了多少&quot;。</p>
+<p><strong>一百万美元归谁。</strong> 别急。按克雷数学研究所的规则，一道千禧年难题的解答要在合格期刊正式发表、经过<strong>至少两年</strong>的公开检验、并获得数学界普遍认可，才进入奖金评审。目前克雷官网仍把黎曼猜想标为&quot;active&quot;（活跃），而非&quot;solved&quot;。机器核验通过和正式获奖，是两件相距甚远的事。</p>
+<p>值得一提的是，Alpöge 公布后几小时，美国数学学会主席 Ravi Vakil 又赶着公开了斯坦福数学家 Alessandro Masullo 一份<strong>全人类、无 AI</strong>、耗时多年、约 940 页的广义黎曼猜想手稿。结果公开约 8 小时后，就有人（借助不同 AI 模型）发现了其中的疑点，目前仍在修订。一边是 AI 辅助、机器核验过的 1700 万行代码，另一边是人类手写、又被 AI 挑出毛病的 940 页手稿——这个对照本身，就是这个时代的缩影。</p>
+<hr>
+<h2>八、真正变了的，是&quot;证明速度超过了理解速度&quot;</h2>
+<p>剥开所有热闹，这件事最深远的意义不在黎曼猜想本身。</p>
+<p>陶哲轩（2006 年菲尔兹奖得主）把近期几项有 AI 深度参与的结果按&quot;被消化的程度&quot;排了个序：三维欧拉方程那项已有人类可读的证明；纳维-斯托克斯那项思路大致清楚但还没定稿；而广义黎曼猜想这项，只有&quot;一份巨大的、仅有 Lean 的证明&quot;。他预计消化它需要时间——不过这一次，&quot;至少有一位人类作者可以对话&quot;。11 月 24 日，他的博客上已经发起了一个 <strong>G.R.H. Polymath</strong> 众包项目，目标就是从这份 Lean 证明里反向提炼出人类能读懂的论证。</p>
+<p>过去的科研范式是：人类发现规律 → 人类写证明 → 别的人类检查。现在出现了一个新局面：<strong>AI 率先给出一份能通过机器验证、却远超人类短期阅读能力的证明。</strong> 人类数学家的工作，正从&quot;寻找证明&quot;扩展到&quot;理解、压缩、提炼 AI 给出的证明&quot;。</p>
+<p>这里有一个必须说清的边界：数学有它特殊的运气——它的对象是纯逻辑，所以才有 Lean 这种&quot;机器可以逐条核验&quot;的捷径。实验科学没有这份运气，它依然离不开真实观测、数据可靠性和结果复现，不能照搬数学的机器核验模式。</p>
+<p>但即便只在数学内部，这件事也足够震撼。它第一次如此清晰地让我们看到：<strong>科学证明的完成速度，可能开始超过人类理解和消化它的速度。</strong> 当一台机器能在 72 小时内确认一份人类几年都读不懂的证明时，&quot;懂&quot;这个字的分量，比&quot;对&quot;更重了。</p>
+<p>167 年前，黎曼在那篇 1859 年的论文里写道，他&quot;暂时搁置&quot;了寻找严格证明的努力，因为那对他当下的目标&quot;似乎可以省去&quot;。167 年后，一台机器替他把这件搁置的事做完了，而全人类还在努力读懂它做了什么。</p>
+<p>数学家的工作不会消失，但它正在改变。梅纳德（2022 年菲尔兹奖得主）说得冷静：AI 不会让数学家失业，但这场变革不可避免地会带来阵痛，而<strong>人类理解的作用始终极其重要——这种理解，正需要由数学家来完成。</strong></p>
+<p>那声钟已经敲响。我们听见了它是&quot;对&quot;的。接下来几年，轮到人类去听懂，它为什么是对的。</p>
+<hr>
+<h2>附：文中数字如何核对</h2>
+<p>文中所有数值（素数计数与 li(x) 之差、用零点叠加重建素数台阶的误差、ψ(x) 在素数处的跳高、相邻零点间距与随机矩阵的定性对照）都来自一个不依赖任何第三方库的 Python 脚本，与本文放在同一目录，<code>python3 test_riemann.py</code> 即可复现。零点数据取自公开的前 50 个 ζ 非平凡零点虚部。</p>
+<p><strong>主要信息来源</strong>（均为 2026 年 11 月）：Alpöge 本人四页说明（alpo.ge/remark.pdf）；Lean 社区联合声明（leanprover-community.github.io）；Andrew Sutherland 核验页（math.mit.edu/~drew/grh）；Terence Tao 博客（terrytao.wordpress.com）；<em>Nature</em>、<em>Quanta Magazine</em>、<em>Scientific American</em>；丘成桐、邓煜、梅纳德在国内媒体的回应。本文为科普整理，非同行评议结论；黎曼猜想的最终认定仍需走完数学界的完整程序。</p>
+    </div>
+    <div class="p-body" lang="en">
+<blockquote>On November 20, 2026, a mathematician said he had proved the Riemann Hypothesis together with Claude. Within a day, a machine confirmed the proof; within three days, the mathematical world was in uproar. This article makes three things clear: what the Riemann Hypothesis actually asks, what this &quot;proof&quot; means, and why &quot;the machine says it&#x27;s correct&quot; and &quot;a human understands it&quot; are two very different things.</blockquote>
+<p><em>Reading time: about 15 minutes. Every number in this piece I recomputed on my own machine; the script is at the end.</em></p>
+<hr>
+<h2>1. A Weekend Set Off by One Post</h2>
+<p>It started with a very short tweet.</p>
+<p>On the morning of November 20, 2026, Scott Armstrong, a mathematical physicist at the Sorbonne in Paris, posted just a few words — &quot;@__alpoge__ ftw&quot; — alongside a screenshot of an unpublished paper. That four-page note came from Levent Alpöge, a mathematician at Anthropic, posted on his own personal website. The opening line read:</p>
+<blockquote>&quot;I believe that, together with Claude, I have found a proof of the Riemann Hypothesis.&quot;</blockquote>
+<p>How big is the Riemann Hypothesis? Mathematician Brian Conrey called it &quot;a monumental moment in human history, and I think the biggest thing that&#x27;s ever happened in mathematics.&quot; Posed in 1859, it has resisted the field for 167 years. It is the eighth problem on Hilbert&#x27;s famous 1900 list, and one of the seven Millennium Prize Problems for which the Clay Mathematics Institute offers a million dollars — of which only the Poincaré conjecture had been solved before.</p>
+<p>Yet the manner of this announcement was deeply unusual. No journal submission, no human-readable paper. What was dumped out instead was roughly <strong>17 million lines</strong> of Lean code (17.37 million lines, to be precise, compressed into 14 volumes). Lean is a &quot;proof assistant&quot;: you write every step of your reasoning in its language, and the computer checks each line for logical gaps.</p>
+<p>The news detonated the math and AI worlds at once. And what made this different from past &quot;an AI solved some problem&quot; headlines was what happened in the next 72 hours: the machine said &quot;correct&quot; almost immediately, while humans still couldn&#x27;t say &quot;why.&quot;</p>
+<hr>
+<h2>2. Meet the Protagonist: What Does the Riemann Hypothesis Actually Ask?</h2>
+<p>To follow the controversy, you first need to know what the Hypothesis says. I&#x27;ll keep formulas to a minimum.</p>
+<h3>Primes are the atoms of the number world</h3>
+<p>A prime is a number divisible only by 1 and itself: 2, 3, 5, 7, 11, 13... They are the &quot;atoms&quot; of the integers — every integer factors uniquely into primes. But their spacing on the number line looks lawless: sometimes they cluster (11 and 13 are a twin pair), sometimes they are far apart.</p>
+<p>For over two thousand years, the question mathematicians most wanted answered was: <strong>up to some number x, how many primes are there in total?</strong> This count is written π(x). For small x you can just count: there are 25 primes below 100. For large x, you need a formula.</p>
+<p>At age 15, Gauss guessed an astonishingly accurate approximation: the number of primes below x is roughly the &quot;logarithmic integral&quot; li(x). How good is it? I counted the true number of primes with a sieve on my own machine and compared it to li(x):</p>
+<div class="table-wrap"><table>
+<thead><tr><th>x</th><th>true π(x)</th><th>Gauss&#x27;s li(x)</th><th>difference</th></tr></thead>
+<tbody>
+<tr><td>1,000</td><td>168</td><td>176.6</td><td>8.6</td></tr><tr><td>10,000</td><td>1,229</td><td>1,245.1</td><td>16.1</td></tr><tr><td>100,000</td><td>9,592</td><td>9,628.8</td><td>36.8</td></tr><tr><td>1,000,000</td><td>78,498</td><td>78,626.5</td><td>128.5</td></tr>
+</tbody>
+</table></div>
+<p>Look at the last column: x grows a thousandfold, yet the error only climbs from 8.6 to 128.5. Gauss&#x27;s curve is like a plane skimming the ground, hugging the true staircase of primes the whole way.</p>
+<h3>The key question: how big can the error get?</h3>
+<p>Gauss&#x27;s li(x) is a smooth curve; the true π(x) is a jagged staircase that steps up by one at every prime. The question is: <strong>how large can the gap between the two ever become?</strong></p>
+<p>The Riemann Hypothesis, put as plainly as possible, asserts that this gap is <strong>held firmly in check</strong>: its magnitude never exceeds a scale of about √x. In other words, although the primes look random, their randomness is &quot;the most honest kind&quot; — like coin flips, the deviation always stays within what statistics permits, and never suddenly runs wild.</p>
+<p>Stanford&#x27;s Steven Strogatz has called the Hypothesis the <em>Moby Dick</em> of mathematics — the deep-sea leviathan that has roamed for over a century and that no one can catch. It matters because hundreds of theorems in number theory, and a swathe of cryptographic algorithms, are all built on the premise &quot;assume the Riemann Hypothesis holds.&quot; Once it is proven, those results flip overnight from &quot;probably true&quot; to &quot;certainly true.&quot;</p>
+<hr>
+<h2>3. Stack Ten Thousand Waves, and the Primes Appear</h2>
+<p>There is a brilliant metaphor that captures the heart of the Riemann Hypothesis in one stroke: <strong>stack ten thousand waves, and you can see the primes.</strong> This is not literary license — it corresponds to a real, precise formula in mathematics that I verified by hand.</p>
+<h3>The zeros are the &quot;waves&quot;</h3>
+<p>Riemann studied a function called ζ (zeta). This function takes the value zero at certain points, called its &quot;zeros.&quot; Some — the &quot;trivial zeros&quot; at the negative even numbers — are dull. The deadly ones are the &quot;non-trivial zeros.&quot;</p>
+<p>Riemann discovered something profound: <strong>every non-trivial zero corresponds to one wave.</strong> Stack all of these waves together, and you can exactly reconstruct the distribution of the primes. One zero, one sine wave; its position sets that wave&#x27;s &quot;pitch&quot; and growth. The more waves you stack, the closer the reconstructed curve hugs the true staircase. Put another way: the first wave sounds a note, the second a little higher; by the time you&#x27;ve stacked ten thousand, the once-smooth curve grows a flight of steps at 2, 3, 5, 7, 11 — and that is exactly this.</p>
+<h3>I computed it myself</h3>
+<p>To confirm that this is no exaggeration, I ran an experiment on my own computer: take the first 50 true ζ zeros, use the explicit formula (the main term minus the wave contributed by each zero) to reconstruct the prime-counting function ψ(x), and compare to the sieve&#x27;s true value. The results (a window of 301 integers near x = 10000):</p>
+<div class="table-wrap"><table>
+<thead><tr><th>zeros used</th><th>mean error</th><th>max error</th></tr></thead>
+<tbody>
+<tr><td>0 (main term x only)</td><td>23.6</td><td>47.8</td></tr><tr><td>10 zeros</td><td>14.1</td><td>31.3</td></tr><tr><td>25 zeros</td><td>12.3</td><td>28.4</td></tr>
+</tbody>
+</table></div>
+<p>As more waves are stacked, the smooth main term gradually grows the shape of the staircase and the mean error keeps falling (the max error falls more slowly because of &quot;Gibbs ringing&quot; at the jumps — an unavoidable artifact of approximating a sudden step with finitely many waves). I also verified something more beautiful: the height of ψ(x)&#x27;s jump at each prime exactly equals the logarithm of that prime — at 10007 (a prime), the step jumps by 9.2110, and log(10007) = 9.2110, to the last digit. <strong>The location of each step is the prime itself.</strong></p>
+<h3>The Hypothesis = all the waves are &quot;equally loud&quot;</h3>
+<p>Now we can translate the Hypothesis into this picture. Each wave&#x27;s &quot;loudness&quot; (amplitude) is set by the position of its corresponding zero. If some zero strays off the special &quot;critical line&quot; (the vertical line where the real part equals 1/2), its wave grows louder and louder as you stack, eventually scrambling the staircase beyond recognition, and the error runs wild.</p>
+<p><strong>The Riemann Hypothesis says: all non-trivial zeros sit obediently on this critical line, so all the waves are &quot;equally loud&quot; and none runs out of control.</strong> If you turned the numbers that govern these waves — the zeros themselves — into a single bell chime, then hearing that bell would mean you had met the protagonist of the Hypothesis.</p>
+<p>Humans have verified over <strong>12 trillion</strong> zeros by computer — every one on the line. But between &quot;checked 12 trillion&quot; and &quot;proved all infinitely many are on the line&quot; lies a chasm: a single counterexample would collapse the entire edifice. That is exactly the chasm Alpöge and Claude claim to have crossed.</p>
+<hr>
+<h2>4. Those 72 Hours: The Machine Says &quot;Yes,&quot; Humans Still Say &quot;Huh?&quot;</h2>
+<p>Back to November 20. After the tweet, Lean experts around the world began an overnight race to independently verify the 17 million lines.</p>
+<h3>Why &quot;it compiles&quot; is not enough</h3>
+<p>Lean&#x27;s first step in verifying a proof is &quot;it compiles&quot; — confirming there&#x27;s no obvious logical fallacy in the code. Andrew Sutherland, a number theorist at MIT, was the first to get it through, before noon. But compiling only shows &quot;the steps are valid&quot;; two trickier questions remain:</p>
+<ol>
+<li><strong>Is the theorem written in the code really the Riemann Hypothesis itself?</strong> Kevin Buzzard of Imperial College had, on November 12, listed the criteria: in principle, code could quietly redefine a symbol and fool the machine with &quot;the Riemann Hypothesis equals the Riemann Hypothesis.&quot; To rule this out, you run a &quot;comparator run&quot; — the community writes a separate file that imports only the standard math library, Mathlib, restates the Hypothesis verbatim, and compares it line by line against what Alpöge proved.</li>
+<li><strong>Did it exploit a bug in Lean itself?</strong> Lean&#x27;s kernel has historically had bugs that let you &quot;prove 0 = 1.&quot; So you verify with multiple independently implemented checkers.</li>
+</ol>
+<h3>The community&#x27;s joint certification</h3>
+<p>On November 21, the Lean FRO and the Mathlib Initiative issued a joint statement with a clear conclusion:</p>
+<blockquote>&quot;We are fully confident that Alpöge&#x27;s proof of the Riemann Hypothesis is correct, and we congratulate him on this achievement.&quot;</blockquote>
+<p>The statement listed four criteria and confirmed each: the statement is correct (taken from Mathlib&#x27;s vetted definitions); the code compiles (dozens of people reproduced the same exported file); it proves the right proposition (two independent tools, a comparator and a second checker, agree); and the proof is valid (Lean&#x27;s official kernel, an independent Rust kernel, and checkers carrying their own formal correctness proofs all accept it).</p>
+<p>Sutherland&#x27;s verification page records the terrifying scale: zero-error compilation of all <strong>175,187 modules</strong> in the library, an exported proof file of <strong>61.5 billion bytes</strong> (~61.5 GB); Lean&#x27;s paranoid-mode kernel ran <strong>72 hours and 20 minutes</strong> single-threaded to check the whole thing. The last line carries the reassuring words: <strong>&quot;Your solution is okay!&quot;</strong></p>
+<p>Stanford&#x27;s Yu Deng (a 2026 Fields Medalist) flagged the distinction behind this: this is &quot;machine-verified,&quot; not &quot;accepted by the mathematical community.&quot; But as Shing-Tung Yau (also a Fields Medalist), attending a symposium in Shenzhen marking the 200th anniversary of Riemann&#x27;s birth, put it, the standard of machine step-by-step decomposition and line-by-line checking is &quot;even higher than the experimental verification standard of many major discoveries in physics,&quot; so there&#x27;s no need to over-doubt its credibility. In his words, <strong>&quot;mathematics has entered a new era.&quot;</strong></p>
+<hr>
+<h2>5. The &quot;250,000 Pages&quot; Joke, and a Real Embarrassment</h2>
+<p>The number that broke out of this story most is &quot;250,000 pages.&quot; It comes from a footnote in Alpöge&#x27;s four-page note: he said he had Claude write the proof as human-readable prose, and it &quot;ran to more than 250,000 pages,&quot; a book he jokingly called the &quot;GRH… book.&quot;</p>
+<p>The number went viral. Some outlets ran headlines like &quot;250,000 pages of slop.&quot; On November 23, Alpöge posted on X, under the heading &quot;stupid things I did,&quot; to clarify:</p>
+<blockquote>&quot;The 250,000+ pages was a joke! I think big numbers are hilarious.&quot;</blockquote>
+<p>But he stressed that while the page count was a joke, <strong>that long, ugly manuscript really exists</strong> — he just felt posting it would be &quot;an enormous, unreadable slop disaster,&quot; so he released only the Lean code. He also admitted his Lean code &quot;is obviously full of garbage, but it compiles,&quot; and that &quot;all criticism of this garbage is completely fair, and I accept it.&quot;</p>
+<p>Joke aside, the number touches a real embarrassment: <strong>a proof confirmed one-hundred-percent correct by a machine that, to this day, not one human has read in full.</strong> Jon Keating of Oxford said: &quot;I don&#x27;t understand it, and I suspect nobody fully does. When I look at it, I&#x27;m in a complete state of awe and wonder.&quot;</p>
+<p>Canadian mathematician Daniel Litt summed up the strange situation most precisely:</p>
+<blockquote>&quot;(1) This Lean formalization of a proof of the Riemann Hypothesis is overwhelmingly likely to be correct. (2) No human understands it yet.&quot;</blockquote>
+<hr>
+<h2>6. The Controversy: A Machine Can Guarantee &quot;No Error,&quot; but Not &quot;The Right Road&quot;</h2>
+<p>Just as everyone thought the dust had settled, a twist arrived on November 22. A scholar named J. L. Nielsen released a rebuttal paper titled, bluntly, &quot;On the Invalidity of Alpöge&#x27;s Proof of the Riemann Hypothesis,&quot; updating it 14 times in 31 hours.</p>
+<p>Her target was a geometric predicate deep in the code called <code>anyGeometry</code> — written to return true no matter the input (identically true). By her count, this always-true definition appears across 24 files and is called 118 times. From this she argued that the vast codebase had verified only a tautological shell, closing a logical loop with &quot;the Riemann Hypothesis equals the Riemann Hypothesis.&quot;</p>
+<p>This controversy pinpoints the <strong>fundamental limitation</strong> of tools like Lean:</p>
+<ul>
+<li>A machine can guarantee <strong>logical consistency</strong> — from the definitions and axioms you write down, every step of reasoning is airtight.</li>
+<li>But a machine <strong>cannot judge whether the definitions you wrote down are faithful to the mathematical meaning they claim.</strong> This is the distinction between &quot;name&quot; and &quot;substance,&quot; and the machine cannot police it.</li>
+</ul>
+<p>Yet Nielsen&#x27;s rebuttal has a key gap. The community&#x27;s verification took a <strong>different route</strong>: since the top-level statement was already confirmed by two independent tools to be Mathlib&#x27;s standard Riemann Hypothesis, and independent kernels accepted a complete proof term with no extra axioms, then even if some intermediate code is written as always-true, that only means that code &quot;doesn&#x27;t do what its name claims&quot; — it is <strong>not by itself enough to overturn the top-level conclusion.</strong> Nielsen herself acknowledged she had actually read only about 70 files, facing a colossus of 175,187 modules.</p>
+<p>As of now, the Riemann Hypothesis has been neither disproved (Clay&#x27;s site still lists it as unsolved) nor has this rebuttal been settled by an authoritative third party. But it put a new question on the table: <strong>as machines grow ever better at finding logical shortcuts in oceans of code, how do humans ensure the road taken is the honest one?</strong></p>
+<hr>
+<h2>7. Not an Isolated Case: Who Gets the Credit, and Who Gets the Million</h2>
+<p>Pull the camera back, and this didn&#x27;t fall from the sky.</p>
+<ul>
+<li>In August this year, Anthropic announced that an unreleased Claude model pushed the classic lower bound on &quot;the proportion of zeros lying on the critical line&quot; from 41.6% to 67.2%, using 60 sub-agents and 31 million output tokens. At the time they said they &quot;did not expect these techniques to prove the Riemann Hypothesis itself.&quot;</li>
+<li>On November 23, Anthropic and OpenAI in turn produced proofs of VP≠VNP (Valiant&#x27;s 1979 conjecture) in complexity theory, each with a Lean formalization.</li>
+</ul>
+<p>AI is treating the whole of mathematics as a training ground. Two old questions are being forced to the front.</p>
+<p><strong>The credit question.</strong> Since May this year, OpenAI has listed only the company name &quot;OpenAI&quot; on papers, with no human authors; Anthropic chose to list Claude as an author; only Google DeepMind still keeps the tradition. The <em>Leiden Declaration</em>, released in June and signed by thousands of mathematicians, gives the community&#x27;s consensus: <strong>credit and responsibility should still belong to humans</strong>; AI may participate but cannot replace the collective human labor behind a result. The new preprint platform Hexagon even requires submitters to declare &quot;how much of this paper was written by AI, and how much the contributor personally understands.&quot;</p>
+<p><strong>Who gets the million.</strong> Not so fast. Under Clay Institute rules, a solution to a Millennium Problem must be formally published in a qualified journal, survive <strong>at least two years</strong> of public scrutiny, and win general acceptance before it enters prize review. Clay&#x27;s site still marks the Riemann Hypothesis &quot;active,&quot; not &quot;solved.&quot; Machine verification and a formal prize are a long way apart.</p>
+<p>Worth noting: hours after Alpöge&#x27;s release, Ravi Vakil, president of the American Mathematical Society, rushed to make public a roughly 940-page, <strong>all-human, no-AI</strong> manuscript of the Generalized Riemann Hypothesis by Stanford mathematician Alessandro Masullo, years in the making. About 8 hours after it went public, someone (aided by a different AI model) found a gap in it; it is still being revised. On one side, 17 million lines of AI-assisted, machine-verified code; on the other, a 940-page human manuscript that AI then poked a hole in — the contrast is itself a portrait of the era.</p>
+<hr>
+<h2>8. What Really Changed: Proof Now Outpaces Understanding</h2>
+<p>Strip away the noise, and the deepest significance of this is not the Riemann Hypothesis itself.</p>
+<p>Terence Tao (a 2006 Fields Medalist) ranked several recent AI-heavy results by &quot;how far they&#x27;ve been digested&quot;: the 3D Euler result already has a human-readable proof; the Navier–Stokes one is roughly understood but not finalized; and the Generalized Riemann Hypothesis one has only &quot;a huge, Lean-only proof.&quot; He expects it will take time to digest — though this time &quot;at least one human author is available to talk to.&quot; On November 24, his blog launched a <strong>G.R.H. Polymath</strong> crowdsourced project, aiming to extract a human-readable argument back out of this Lean proof.</p>
+<p>The old research paradigm was: humans find a pattern → humans write a proof → other humans check it. Now a new situation has appeared: <strong>AI produces, first, a proof that passes machine verification but far exceeds humans&#x27; near-term ability to read.</strong> The mathematician&#x27;s job is expanding from &quot;finding proofs&quot; to &quot;understanding, compressing, and distilling the proofs AI produces.&quot;</p>
+<p>One boundary must be stated clearly: mathematics has a special kind of luck — its objects are pure logic, which is exactly why a &quot;machine can check it line by line&quot; shortcut like Lean exists at all. Experimental science has no such luck; it still cannot do without real observation, data reliability, and reproducibility, and cannot simply copy mathematics&#x27; machine-verification model.</p>
+<p>But even within mathematics, this is stunning enough. For the first time it lets us see, so clearly: <strong>the speed at which a scientific proof is completed may be starting to outrun the speed at which humans understand and digest it.</strong> When a machine can confirm in 72 hours a proof humans may not read for years, the word &quot;understand&quot; now weighs more than the word &quot;correct.&quot;</p>
+<p>167 years ago, in that 1859 paper, Riemann wrote that he had &quot;set aside&quot; the search for a rigorous proof, because for his immediate purpose it &quot;seemed dispensable.&quot; 167 years later, a machine finished the thing he set aside, while all of humanity still works to understand what it did.</p>
+<p>The mathematician&#x27;s job will not disappear, but it is changing. James Maynard (a 2022 Fields Medalist) put it coolly: AI will not put mathematicians out of work, but the transformation will inevitably bring pain — and <strong>the role of human understanding remains extremely important, and that understanding is exactly what mathematicians must supply.</strong></p>
+<p>The bell has rung. We&#x27;ve heard that it is &quot;correct.&quot; Over the next few years, it falls to humans to hear <em>why</em> it is correct.</p>
+<hr>
+<h2>Appendix: How to Check the Numbers</h2>
+<p>Every number in this piece (the π(x)–li(x) difference, the reconstruction error from stacking zeros, the height of ψ(x)&#x27;s jump at primes, and the qualitative comparison of adjacent zero spacings against random-matrix theory) comes from a single Python script with no third-party dependencies, sitting in the same directory as this article; run <code>python3 test_riemann.py</code> to reproduce them. The zero data are the imaginary parts of the first 50 publicly known non-trivial ζ zeros.</p>
+<p><strong>Main sources</strong> (all November 2026): Alpöge&#x27;s own four-page note (alpo.ge/remark.pdf); the Lean community joint statement (leanprover-community.github.io); Andrew Sutherland&#x27;s verification page (math.mit.edu/~drew/grh); Terence Tao&#x27;s blog (terrytao.wordpress.com); <em>Nature</em>, <em>Quanta Magazine</em>, <em>Scientific American</em>; and responses from Shing-Tung Yau, Yu Deng, and James Maynard in the press. This is a popular-science synthesis, not a peer-reviewed conclusion; final adjudication of the Riemann Hypothesis still requires the full process of the mathematical community.</p>
+    </div>
+    <hr class="p-end">
+    <p class="back" lang="zh-CN"><a href="../#cat-math">&larr; 返回数学与科学</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#cat-math">&larr; back to Math &amp; science</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+  </article>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>&copy; 2026 Nolan Pierce &middot; <span lang="zh-CN">边做边公开</span><span lang="en">built in public</span></span>
+    <span class="sep"></span>
+    <a href="https://github.com/nolanpix">GitHub</a>
+    <a href="https://x.com/nolanpierce_lab">X / @nolanpierce_lab</a>
+    <a href="https://nolanpix-counter.song66666.workers.dev/admin" rel="nofollow"><span lang="zh-CN">站长后台（仅管理员可进入）</span><span lang="en">Owner dashboard (admins only)</span></a>
+  </div>
+</footer>
+
+<script defer src="../assets/stats.js"></script>
+
+</body>
+</html>

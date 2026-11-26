@@ -40,9 +40,8 @@
   <ul>
     <li><a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">Notes</span></a>
       <ul>
-        <li><a href="macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li>
-        <li><a href="structuring-eco-work.html"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li>
-        <li><a href="rtl2gds-timing-closed.html" aria-current="page"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li>
+        <li><details class="rail-cat" open><summary><span lang="zh-CN">数字后端</span><span lang="en">Digital backend</span><span class="n">3</span></summary><ul><li><a href="macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li><li><a href="structuring-eco-work.html"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li><li><a href="rtl2gds-timing-closed.html" aria-current="page"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li></ul></details></li>
+        <li><details class="rail-cat"><summary><span lang="zh-CN">数学与科学</span><span lang="en">Math &amp; science</span><span class="n">1</span></summary><ul><li><a href="riemann-hypothesis-ai-proof.html"><span lang="zh-CN">黎曼猜想与 AI 证明</span><span lang="en">Riemann &amp; AI proof</span></a></li></ul></details></li>
       </ul>
     </li>
     <li><a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">Repos</span></a></li>
@@ -57,8 +56,8 @@
 
 <main class="wrap">
   <article class="post">
-    <a class="back" href="../#notes"><span lang="zh-CN">&larr; 全部笔记</span><span lang="en">&larr; all notes</span></a>
-    <p class="p-meta mono"><span lang="zh-CN">2026年11月20日 &nbsp;&middot;&nbsp; RTL2GDS &middot; 签核 &middot; 时序</span><span lang="en">November 20, 2026 &nbsp;&middot;&nbsp; RTL2GDS &middot; signoff &middot; timing</span></p>
+    <a class="back" href="../#cat-backend"><span lang="zh-CN">&larr; 数字后端</span><span lang="en">&larr; Digital backend</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月20日 &nbsp;&middot;&nbsp; <a href="../#cat-backend">数字后端</a> &nbsp;&middot;&nbsp; RTL2GDS &middot; 签核 &middot; 时序</span><span lang="en">November 20, 2026 &nbsp;&middot;&nbsp; <a href="../#cat-backend">Digital backend</a> &nbsp;&middot;&nbsp; RTL2GDS &middot; signoff &middot; timing</span></p>
     <h1><span lang="zh-CN">RTL2GDS：综合只是容易的那一半</span><span lang="en">RTL2GDS: synthesis is the easy half</span></h1>
     <div class="p-body" lang="zh-CN">
 <p>我关注 RTL2GDS 排行榜，就像有些人追体育比分。头条数字永远是“综合通过了”——而那只是容易的一半。把 RTL 综合成门级网表，已经是一个基本解决了的问题。真正让大多数流程栽跟头的，是在另一端拿出一份干净的、<code>timing-closed GDSII</code>（时序收敛的 GDSII）。</p>
@@ -105,8 +104,8 @@
 <p>So when a new flow lands a clean GDSII with timing closed, it is worth more than a faster synthesis time. Synthesis gets you to the start line. Everything interesting - and everything hard - happens between placement and signoff.</p>
     </div>
     <hr class="p-end">
-    <p class="back" lang="zh-CN"><a href="../#notes">&larr; 返回笔记列表</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
-    <p class="back" lang="en"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+    <p class="back" lang="zh-CN"><a href="../#cat-backend">&larr; 返回数字后端</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#cat-backend">&larr; back to Digital backend</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
   </article>
 </main>
 

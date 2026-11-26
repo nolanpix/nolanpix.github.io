@@ -40,9 +40,8 @@
   <ul>
     <li><a href="../#notes"><span lang="zh-CN">笔记</span><span lang="en">Notes</span></a>
       <ul>
-        <li><a href="macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li>
-        <li><a href="structuring-eco-work.html" aria-current="page"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li>
-        <li><a href="rtl2gds-timing-closed.html"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li>
+        <li><details class="rail-cat" open><summary><span lang="zh-CN">数字后端</span><span lang="en">Digital backend</span><span class="n">3</span></summary><ul><li><a href="macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li><li><a href="structuring-eco-work.html" aria-current="page"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li><li><a href="rtl2gds-timing-closed.html"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li></ul></details></li>
+        <li><details class="rail-cat"><summary><span lang="zh-CN">数学与科学</span><span lang="en">Math &amp; science</span><span class="n">1</span></summary><ul><li><a href="riemann-hypothesis-ai-proof.html"><span lang="zh-CN">黎曼猜想与 AI 证明</span><span lang="en">Riemann &amp; AI proof</span></a></li></ul></details></li>
       </ul>
     </li>
     <li><a href="../#repos"><span lang="zh-CN">仓库</span><span lang="en">Repos</span></a></li>
@@ -57,8 +56,8 @@
 
 <main class="wrap">
   <article class="post">
-    <a class="back" href="../#notes"><span lang="zh-CN">&larr; 全部笔记</span><span lang="en">&larr; all notes</span></a>
-    <p class="p-meta mono"><span lang="zh-CN">2026年11月22日 &nbsp;&middot;&nbsp; ECO &middot; 脚本 &middot; 工作流</span><span lang="en">November 22, 2026 &nbsp;&middot;&nbsp; ECO &middot; scripting &middot; workflow</span></p>
+    <a class="back" href="../#cat-backend"><span lang="zh-CN">&larr; 数字后端</span><span lang="en">&larr; Digital backend</span></a>
+    <p class="p-meta mono"><span lang="zh-CN">2026年11月22日 &nbsp;&middot;&nbsp; <a href="../#cat-backend">数字后端</a> &nbsp;&middot;&nbsp; ECO &middot; 脚本 &middot; 工作流</span><span lang="en">November 22, 2026 &nbsp;&middot;&nbsp; <a href="../#cat-backend">Digital backend</a> &nbsp;&middot;&nbsp; ECO &middot; scripting &middot; workflow</span></p>
     <h1><span lang="zh-CN">复杂 ECO 工作的组织方式：只设三道关卡</span><span lang="en">Structuring complex ECO work around three gates</span></h1>
     <div class="p-body" lang="zh-CN">
 <p>大型 ECO 和重度依赖脚本的工作，崩溃的方式往往可以预料：所有东西都在改所有东西，没人说得清新出现的违例是哪次改动引起的；评审要么时时刻刻都在做（进度慢得像在爬），要么根本不做（最后交出一团乱麻）。下面是对我有效的组织方式。</p>
@@ -93,8 +92,8 @@
 <p>This is just the same idea the back-end flow already runs on: a single source of truth for the mutation, cheap parallel observation around it, and expensive checks batched at a few well-chosen checkpoints instead of smeared across everything.</p>
     </div>
     <hr class="p-end">
-    <p class="back" lang="zh-CN"><a href="../#notes">&larr; 返回笔记列表</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
-    <p class="back" lang="en"><a href="../#notes">&larr; back to notes</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
+    <p class="back" lang="zh-CN"><a href="../#cat-backend">&larr; 返回数字后端</a>，或者在 <a href="https://x.com/nolanpierce_lab">X</a> 上关注后续。</p>
+    <p class="back" lang="en"><a href="../#cat-backend">&larr; back to Digital backend</a> &nbsp; or follow along on <a href="https://x.com/nolanpierce_lab">X</a>.</p>
   </article>
 </main>
 

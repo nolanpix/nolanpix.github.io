@@ -202,6 +202,14 @@ section.band { padding: 46px 0 8px; scroll-margin-top: 58px; } /* anchor jumps l
 .band-head .count { color: var(--faint); font-size: 0.8rem; }
 
 /* ---- note list ---- */
+.note-group { scroll-margin-top: 58px; }
+.note-group + .note-group { margin-top: 30px; }
+.note-cat {
+  display: flex; align-items: baseline; gap: 9px; margin: 0 0 10px;
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
+  font-weight: 600; font-size: 0.98rem; letter-spacing: 0.01em;
+}
+.note-cat .n { color: var(--faint); font-size: 0.75rem; font-weight: 400; }
 .notes { border-top: 1px solid var(--line); }
 .note-row {
   display: grid; grid-template-columns: 112px 1fr; gap: 18px;
@@ -260,6 +268,8 @@ footer.site .sep { flex: 1; }
 article.post { padding: 40px 0 10px; }
 .post .back { color: var(--muted); font-size: 0.88rem; }
 .post .p-meta { color: var(--faint); font-size: 0.82rem; margin: 22px 0 10px; }
+.post .p-meta a { color: var(--muted); }
+.post .p-meta a:hover { color: var(--accent); }
 .post h1 {
   font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.12;
@@ -271,8 +281,24 @@ article.post { padding: 40px 0 10px; }
   font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
   font-weight: 600; font-size: 1.3rem; margin: 34px 0 10px; letter-spacing: -0.01em;
 }
+.post .p-body h3 {
+  font-family: "Space Grotesk", var(--cjk), ui-sans-serif, sans-serif;
+  font-weight: 600; font-size: 1.06rem; margin: 24px 0 8px;
+}
 .post .p-body p { margin: 0 0 16px; }
-.post .p-body ul { margin: 0 0 16px; padding-left: 22px; }
+.post .p-body strong { color: var(--fg); font-weight: 600; }
+.post .p-body ul, .post .p-body ol { margin: 0 0 16px; padding-left: 22px; }
+.post .p-body hr { border: 0; border-top: 1px solid var(--line); margin: 30px 0; }
+.post .p-body .table-wrap { margin: 8px 0 20px; overflow-x: auto; }
+.post .p-body table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.92rem; font-variant-numeric: tabular-nums;
+}
+.post .p-body th, .post .p-body td {
+  padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left;
+}
+.post .p-body th { color: var(--fg); font-weight: 600; }
+.post .p-body td { color: var(--muted); }
 .post .p-body li { margin: 6px 0; }
 .post .p-body code {
   font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
@@ -297,6 +323,9 @@ article.post { padding: 40px 0 10px; }
   .tools { grid-template-columns: 1fr; }
   .note-row { grid-template-columns: 1fr; gap: 4px; }
   .note-row .n-sum, .note-row .n-tags { grid-column: 1; }
+  /* Narrow screens: scroll a table instead of crushing four columns into 340px. */
+  .post .p-body table { min-width: 520px; }
+  .post .p-body th, .post .p-body td { white-space: nowrap; }
 }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
@@ -380,4 +409,16 @@ article.post { padding: 40px 0 10px; }
 .rail a:hover { color: var(--fg); }
 .rail li li a { padding-left: 12px; border-left: 1px solid var(--line); }
 .rail a[aria-current="page"] { color: var(--fg); border-left-color: var(--accent); }
+/* Topics fold with native <details>, so a long list stays two levels deep until opened. */
+.rail details { margin: 0; }
+.rail summary {
+  display: flex; align-items: baseline; gap: 5px; cursor: pointer;
+  padding: 2px 0; color: var(--muted); list-style: none;
+}
+.rail summary::-webkit-details-marker { display: none; }
+.rail summary::before { content: "\25B8"; font-size: 0.7em; color: var(--faint); }
+.rail details[open] > summary::before { content: "\25BE"; }
+.rail summary:hover { color: var(--fg); }
+.rail summary .n { margin-left: auto; color: var(--faint); font-size: 0.72rem; }
+.rail details > ul { margin-top: 2px; }
 @media print { .rail { display: none; } }

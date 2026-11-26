@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nolan Pierce - 后端笔记，从 floorplan 到 signoff</title>
-<meta name="description" content="Nolan Pierce，洛杉矶的数字 IC 物理设计工程师。这里有布局布线、时钟树和时序签核的笔记，以及他公开做的小工具。">
+<meta name="description" content="Nolan Pierce，洛杉矶的数字 IC 物理设计工程师。笔记按主题分组：数字后端（布局布线、时钟树、时序签核），以及数学、AI 等与芯片无关的写作，还有公开做的小工具。">
 <meta property="og:title" content="Nolan Pierce - 后端笔记，从 floorplan 到 signoff">
-<meta property="og:description" content="布局布线、时钟树与时序签核的实战笔记，以及边做边公开的代码仓库和小工具。">
+<meta property="og:description" content="数字后端的实战笔记，以及数学、AI 等与芯片无关的写作；按主题分组，边做边公开。">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff5a3c'/%3E%3Cstop offset='1' stop-color='%23c0398f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Space Grotesk,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3Enp.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,9 +41,8 @@
   <ul>
     <li><a href="#notes"><span lang="zh-CN">笔记</span><span lang="en">Notes</span></a>
       <ul>
-        <li><a href="notes/macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li>
-        <li><a href="notes/structuring-eco-work.html"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li>
-        <li><a href="notes/rtl2gds-timing-closed.html"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li>
+        <li><details class="rail-cat"><summary><span lang="zh-CN">数字后端</span><span lang="en">Digital backend</span><span class="n">3</span></summary><ul><li><a href="notes/macro-placement-fast-repair.html"><span lang="zh-CN">宏单元摆放</span><span lang="en">Macro placement</span></a></li><li><a href="notes/structuring-eco-work.html"><span lang="zh-CN">ECO 三道关卡</span><span lang="en">ECO gates</span></a></li><li><a href="notes/rtl2gds-timing-closed.html"><span lang="zh-CN">RTL2GDS 踩坑</span><span lang="en">RTL2GDS pitfalls</span></a></li></ul></details></li>
+        <li><details class="rail-cat" open><summary><span lang="zh-CN">数学与科学</span><span lang="en">Math &amp; science</span><span class="n">1</span></summary><ul><li><a href="notes/riemann-hypothesis-ai-proof.html"><span lang="zh-CN">黎曼猜想与 AI 证明</span><span lang="en">Riemann &amp; AI proof</span></a></li></ul></details></li>
       </ul>
     </li>
     <li><a href="#repos"><span lang="zh-CN">仓库</span><span lang="en">Repos</span></a></li>
@@ -63,12 +62,13 @@
     <p class="eyebrow mono">DIE: <b>nolanpix</b> &nbsp; 860 x 420 um &nbsp; util 68%</p>
     <h1 class="title"><span lang="zh-CN">后端笔记，从 <span class="grad">floorplan</span> 到 signoff。</span><span lang="en">Backend notes, from <span class="grad">floorplan</span> to signoff.</span></h1>
     <p class="lede" lang="zh-CN">
-      我是 Nolan Pierce，在洛杉矶做数字 IC 物理设计（P&amp;R、CTS、STA、签核）。这里是我的公开笔记本：后端流程里的短篇心得、我发布的代码仓库，以及顺手做的小工具。所有内容都会先发在这里。第一次来？下面这张布局图就是导航。
+      我是 Nolan Pierce，在洛杉矶做数字 IC 物理设计（P&amp;R、CTS、STA、签核）。这里是我的公开笔记本：笔记按主题分组，除了后端流程，也会写数学、AI 这些和芯片无关的东西；另有我发布的代码仓库和顺手做的小工具。所有内容都会先发在这里。第一次来？下面这张布局图就是导航。
     </p>
     <p class="lede" lang="en">
       I'm Nolan Pierce, a digital IC physical design engineer in Los Angeles
-      (P&amp;R, CTS, STA, signoff). This is my open notebook: short write-ups from the
-      back-end flow, the repos I publish, and small tools I build. Everything lands here
+      (P&amp;R, CTS, STA, signoff). This is my open notebook. Notes are grouped by topic:
+      the back-end flow, plus math and AI writing that has nothing to do with chips.
+      There are also the repos I publish and small tools I build. Everything lands here
       first. New here? The floorplan below is the map.
     </p>
 
@@ -81,8 +81,8 @@
           <span class="pin"></span>
           <span class="tag mono">BLOCK A</span>
           <h3><span lang="zh-CN">笔记</span><span lang="en">Notes</span></h3>
-          <p lang="zh-CN">布局、CTS、时序收敛与签核的实战笔记，最新的排在最前。</p>
-          <p lang="en">Write-ups on placement, CTS, timing closure and signoff. Newest first.</p>
+          <p lang="zh-CN">按主题分组：数字后端，以及数学、AI 等与芯片无关的写作，最新的排在最前。</p>
+          <p lang="en">Grouped by topic: digital back end, plus math, AI and other writing beyond chips. Newest first.</p>
         </a>
         <a class="block" href="#repos">
           <span class="pin"></span>
@@ -110,32 +110,46 @@
   </section>
 
   <section class="band" id="notes">
-    <div class="band-head">
-      <h2><span lang="zh-CN">最新笔记</span><span lang="en">Latest notes</span></h2>
-      <span class="count mono"><span lang="zh-CN">3 篇</span><span lang="en">3 posts</span></span>
-    </div>
+<!-- notes:start (generated by tools/gen_notes.py) -->
+  <div class="band-head">
+    <h2><span lang="zh-CN">全部笔记</span><span lang="en">All notes</span></h2>
+    <span class="count mono"><span lang="zh-CN">4 篇 &middot; 2 个主题</span><span lang="en">4 posts &middot; 2 topics</span></span>
+  </div>
+  <div class="note-group" id="cat-backend">
+    <h3 class="note-cat"><span lang="zh-CN">数字后端</span><span lang="en">Digital backend</span><span class="n mono">3</span></h3>
     <div class="notes">
       <a class="note-row" href="notes/macro-placement-fast-repair.html">
         <time class="mono" datetime="2026-11-24">2026-11-24</time>
         <span class="n-title"><span lang="zh-CN">宏单元摆放：快速局部修复比一味压线长更有效</span><span lang="en">Macro placement: fast local repair beats raw wirelength</span></span>
-        <span class="n-sum"><span lang="zh-CN">一次获胜的宏单元摆放方案让我学到的：多起点搜索、按拥塞排序，以及永远不能跳过合法性检查。</span><span lang="en">What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality checks.</span></span>
+        <span class="n-sum"><span lang="zh-CN">一次获胜的宏单元摆放方案让我学到的：多起点搜索、按拥塞排序，以及永远不能跳过合法性检查。</span><span lang="en">What a winning macro-placement run taught me about multi-start search, congestion-aware ranking, and never skipping legality.</span></span>
         <span class="n-tags"><span lang="zh-CN"><span class="chip">布局</span><span class="chip">拥塞</span><span class="chip">合法性</span></span><span lang="en"><span class="chip">placement</span><span class="chip">congestion</span><span class="chip">legality</span></span></span>
       </a>
-
       <a class="note-row" href="notes/structuring-eco-work.html">
         <time class="mono" datetime="2026-11-22">2026-11-22</time>
         <span class="n-title"><span lang="zh-CN">复杂 ECO 工作的组织方式：只设三道关卡</span><span lang="en">Structuring complex ECO work around three gates</span></span>
-        <span class="n-sum"><span lang="zh-CN">修复只交给一个执行者，搜索和差异审计交给只读的协作者，重量级评审只放在方案锁定、同类错误第二次出现和最终签核这三处。</span><span lang="en">One driver on the fixes, read-only workers for search and diff audits, and heavy review only at plan-lock, the second repeated error, and final signoff.</span></span>
+        <span class="n-sum"><span lang="zh-CN">修复只交给一个执行者，审计交给只读的协作者，重量级评审只放在三道关卡上。</span><span lang="en">One driver on the fixes, read-only workers for audits, and heavy review at only three gates.</span></span>
         <span class="n-tags"><span lang="zh-CN"><span class="chip">ECO</span><span class="chip">脚本</span><span class="chip">工作流</span></span><span lang="en"><span class="chip">ECO</span><span class="chip">scripting</span><span class="chip">workflow</span></span></span>
       </a>
-
       <a class="note-row" href="notes/rtl2gds-timing-closed.html">
         <time class="mono" datetime="2026-11-20">2026-11-20</time>
         <span class="n-title"><span lang="zh-CN">RTL2GDS：综合只是容易的那一半</span><span lang="en">RTL2GDS: synthesis is the easy half</span></span>
-        <span class="n-sum"><span lang="zh-CN">真正让大多数流程栽跟头的，是最后拿出一份干净、时序收敛的 GDSII。这是一份从追排行榜的习惯里整理出的“踩坑地图”。</span><span lang="en">Getting a clean, timing-closed GDSII out the far side is where most flows fall apart. A field guide to where they break, from a leaderboard-watching habit.</span></span>
+        <span class="n-sum"><span lang="zh-CN">真正让大多数流程栽跟头的，是最后拿出一份干净、时序收敛的 GDSII。</span><span lang="en">Getting a clean, timing-closed GDSII out the far side is where most flows fall apart.</span></span>
         <span class="n-tags"><span lang="zh-CN"><span class="chip">RTL2GDS</span><span class="chip">签核</span><span class="chip">时序</span></span><span lang="en"><span class="chip">RTL2GDS</span><span class="chip">signoff</span><span class="chip">timing</span></span></span>
       </a>
     </div>
+  </div>
+  <div class="note-group" id="cat-math">
+    <h3 class="note-cat"><span lang="zh-CN">数学与科学</span><span lang="en">Math &amp; science</span><span class="n mono">1</span></h3>
+    <div class="notes">
+      <a class="note-row" href="notes/riemann-hypothesis-ai-proof.html">
+        <time class="mono" datetime="2026-11-26">2026-11-26</time>
+        <span class="n-title"><span lang="zh-CN">素数台阶上的十亿分之一：AI 证明黎曼猜想之后，人类在等什么</span><span lang="en">One in a Billion, on the Staircase of Primes: After an AI Proved the Riemann Hypothesis, What Is Humanity Waiting For?</span></span>
+        <span class="n-sum"><span lang="zh-CN">机器在 72 小时内确认了证明，人类却还要几年才读得懂。黎曼猜想到底在问什么，这份 Lean 证明解决了什么、没解决什么，以及为什么&quot;对&quot;和&quot;懂&quot;是两件事。</span><span lang="en">A machine confirmed the proof in 72 hours; humans are still years from understanding it. What the Riemann Hypothesis asks, what the Lean proof does and does not settle, and why &quot;correct&quot; and &quot;understood&quot; are different things.</span></span>
+        <span class="n-tags"><span lang="zh-CN"><span class="chip">数学</span><span class="chip">黎曼猜想</span><span class="chip">AI</span><span class="chip">Lean</span></span><span lang="en"><span class="chip">math</span><span class="chip">Riemann</span><span class="chip">AI</span><span class="chip">Lean</span></span></span>
+      </a>
+    </div>
+  </div>
+<!-- notes:end -->
   </section>
 
   <section class="band" id="repos">
