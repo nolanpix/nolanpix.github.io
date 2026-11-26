@@ -320,3 +320,12 @@ the nav, and the "what is this / how to use it" explainer in one object.
 - 验证（headless Chromium `chromium-1248/chrome-linux-arm64`，file:// 本地页）：
   - 1440/390 两档：无横向溢出（scrollWidth == clientWidth），hero/标题/lede 文案与中英切换后的 `document.title` 全部命中，无 page error。
   - 320 宽时 eyebrow 折成两行（44px），仍无溢出，属可接受的极端窄屏表现。
+
+## 13. 改进策略（hero 文案“数学”→“写作”，2026-11-26）
+
+- 用户追加要求：把 §12 文案里的“数学”换成“写作”，强调写作而不是数学。
+- 改动范围：`<title>`、`data-title-en`、og:title、meta description、og:description、h1（中英）、lede（中英）、布局图 BLOCK A 描述（中英）。
+  - 中文标题 → “芯片、写作与小工具：我的公开笔记本。”；英文 → “Silicon, writing, and small tools: my open notebook.”
+  - lede 改为“芯片之外还有写作、AI 和其他领域的长文”，英文 “also cover writing, AI, and other fields beyond chips”。
+  - 只改首页表达；左栏/首页分组里的真实主题名“数学与科学 / Math & science”以及黎曼文章的 `数学` 标签保留不动。
+- 验证：同一套 headless 检查（1440/390、中英切换、无横向溢出）。
